@@ -18,30 +18,29 @@ package com.example.android.architecture.blueprints.todoapp.tasks.domain.usecase
 
 import android.support.annotation.NonNull;
 
-import com.example.android.architecture.blueprints.todoapp.UseCase;
+import com.example.android.architecture.blueprints.todoapp.UseCaseRx;
 import com.example.android.architecture.blueprints.todoapp.data.source.TasksRepository;
 
-import static com.google.common.base.Preconditions.checkNotNull;
+import rx.Observable;
+import rx.Scheduler;
 
 /**
  * Deletes tasks marked as completed.
  */
-public class ClearCompleteTasks
-        extends UseCase<ClearCompleteTasks.RequestValues, ClearCompleteTasks.ResponseValue> {
+public class ClearCompleteTasks extends UseCaseRx<ClearCompleteTasks.RequestValues> {
 
-    private final TasksRepository mTasksRepository;
+    private TasksRepository tasksRepository;
 
-    public ClearCompleteTasks(@NonNull TasksRepository tasksRepository) {
-        mTasksRepository = checkNotNull(tasksRepository, "tasksRepository cannot be null!");
+    public ClearCompleteTasks(Scheduler threadExecutor, Scheduler postExecutionThread, @NonNull TasksRepository tasksRepository) {
+        super(threadExecutor, postExecutionThread);
+        this.tasksRepository = tasksRepository;
     }
 
     @Override
-    protected void executeUseCase(final RequestValues values) {
-        mTasksRepository.clearCompletedTasks();
-        getUseCaseCallback().onSuccess(new ResponseValue());
+    protected Observable buildUseCaseObservable(RequestValues requestValues) {
+        return tasksRepository.clearCompletedTasks().toObservable();
     }
 
-    public static class RequestValues implements UseCase.RequestValues { }
+    public static class RequestValues extends UseCaseRx.RequestValues { }
 
-    public static class ResponseValue implements UseCase.ResponseValue { }
 }

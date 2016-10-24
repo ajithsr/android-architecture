@@ -82,7 +82,9 @@ public class TaskDetailPresenter implements TaskDetailContract.Presenter {
       }
 
       mTaskDetailView.setLoadingIndicator(true);
-      mGetTask.execute(new Subscriber<Task>() {
+      GetTask.RequestValues requestValues = new GetTask.RequestValues(mTaskId);
+
+      mGetTask.execute(requestValues,new Subscriber<Task>() {
          @Override
          public void onCompleted() {
 
@@ -141,19 +143,24 @@ public class TaskDetailPresenter implements TaskDetailContract.Presenter {
          mTaskDetailView.showMissingTask();
          return;
       }
+      CompleteTask.RequestValues requestValues = new CompleteTask.RequestValues(mTaskId);
+      mCompleteTask.execute(requestValues, new Subscriber() {
+         @Override
+         public void onCompleted() {
+            mTaskDetailView.showTaskMarkedComplete();
+         }
 
-      mUseCaseHandler.execute(mCompleteTask, new CompleteTask.RequestValues(mTaskId),
-            new UseCase.UseCaseCallback<CompleteTask.ResponseValue>() {
-               @Override
-               public void onSuccess(CompleteTask.ResponseValue response) {
-                  mTaskDetailView.showTaskMarkedComplete();
-               }
+         @Override
+         public void onError(Throwable e) {
 
-               @Override
-               public void onError() {
-                  // Show error, log, etc.
-               }
-            });
+         }
+
+         @Override
+         public void onNext(Object o) {
+
+         }
+      });
+
    }
 
    @Override

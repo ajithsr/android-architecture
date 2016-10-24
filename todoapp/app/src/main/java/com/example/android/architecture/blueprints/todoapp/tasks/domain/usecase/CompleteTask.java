@@ -18,30 +18,33 @@ package com.example.android.architecture.blueprints.todoapp.tasks.domain.usecase
 
 import android.support.annotation.NonNull;
 
-import com.example.android.architecture.blueprints.todoapp.UseCase;
+import com.example.android.architecture.blueprints.todoapp.UseCaseRx;
 import com.example.android.architecture.blueprints.todoapp.data.source.TasksRepository;
+
+import rx.Observable;
+import rx.Scheduler;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * Marks a task as completed.
  */
-public class CompleteTask extends UseCase<CompleteTask.RequestValues, CompleteTask.ResponseValue> {
+public class CompleteTask extends UseCaseRx<CompleteTask.RequestValues> {
 
     private final TasksRepository mTasksRepository;
 
-    public CompleteTask(@NonNull TasksRepository tasksRepository) {
+    public CompleteTask(Scheduler threadExecutor, Scheduler postExecutionThread, @NonNull TasksRepository tasksRepository) {
+        super(threadExecutor, postExecutionThread);
         mTasksRepository = checkNotNull(tasksRepository, "tasksRepository cannot be null!");
+
     }
 
     @Override
-    protected void executeUseCase(final RequestValues values) {
-        String completedTask = values.getCompletedTask();
-        mTasksRepository.completeTask(completedTask);
-        getUseCaseCallback().onSuccess(new ResponseValue());
+    protected Observable buildUseCaseObservable(RequestValues requestValues) {
+        return mTasksRepository.completeTask(requestValues.getCompletedTask()).toObservable();
     }
 
-    public static final class RequestValues implements UseCase.RequestValues {
+    public static final class RequestValues extends UseCaseRx.RequestValues {
 
         private final String mCompletedTask;
 
@@ -52,8 +55,5 @@ public class CompleteTask extends UseCase<CompleteTask.RequestValues, CompleteTa
         public String getCompletedTask() {
             return mCompletedTask;
         }
-    }
-
-    public static final class ResponseValue implements UseCase.ResponseValue {
     }
 }

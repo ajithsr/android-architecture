@@ -36,35 +36,48 @@ import static com.google.common.base.Preconditions.checkNotNull;
 /**
  * Fetches the list of tasks.
  */
-public class GetTasks extends UseCaseRx {
+public class GetTasks extends UseCaseRx<GetTasks.RequestValues> {
 
-    private final TasksRepository mTasksRepository;
+   private final TasksRepository mTasksRepository;
+   private final FilterFactory filterFactory;
 
-    private final FilterFactory mFilterFactory;
-    private boolean mForceUpdate;
-    private TasksFilterType currentFiltering;
 
-    public GetTasks( Scheduler threadExecutor,
-                    Scheduler postExecutionThread,@NonNull TasksRepository tasksRepository, @NonNull FilterFactory filterFactory, boolean mForceUpdate, TasksFilterType currentFiltering) {
-        super(threadExecutor,postExecutionThread);
-        mTasksRepository = checkNotNull(tasksRepository, "tasksRepository cannot be null!");
-        mFilterFactory = checkNotNull(filterFactory, "filterFactory cannot be null!");
-        this.mForceUpdate = mForceUpdate;
-        this.currentFiltering = currentFiltering;
-    }
+   public GetTasks(Scheduler threadExecutor,
+                   Scheduler postExecutionThread, @NonNull TasksRepository tasksRepository, @NonNull FilterFactory filterFactory, boolean mForceUpdate, TasksFilterType currentFiltering) {
+      super(threadExecutor, postExecutionThread);
+      mTasksRepository = checkNotNull(tasksRepository, "tasksRepository cannot be null!");
+      this.filterFactory = checkNotNull(filterFactory, "filterFactory cannot be null!");
+   }
 
-    @Override
-    protected Observable<List<Task>> buildUseCaseObservable() {
-        if (mForceUpdate) {
-            mTasksRepository.refreshTasks();
-        }
-        return mTasksRepository.getTasks().map(new Func1<List<Task>, List<Task>>() {
-            @Override
-            public List<Task> call(List<Task> tasks) {
-                TaskFilter taskFilter = mFilterFactory.create(currentFiltering);
-                List<Task> tasksFiltered = taskFilter.filter(tasks);
-                return tasksFiltered;
-            }
-        });
-    }
+
+   @Override
+   protected Observable buildUseCaseObservable(final GetTasks.RequestValues requestValues) {
+      if (requestValues.isForceUpdate()) {
+         mTasksRepository.refreshTasks();
+      }
+      return mTasksRepository.getTasks().map(new Func1<List<Task>, List<Task>>() {
+         @Override
+         public List<Task> call(List<Task> tasks) {
+            TaskFilter taskFilter = filterFactory.create(requestValues.currentFiltering);
+            List<Task> tasksFiltered = taskFilter.filter(tasks);
+            return tasksFiltered;
+         }
+      });
+   }
+
+   public static final class RequestValues extends UseCaseRx.RequestValues {
+      private boolean forceUpdate;
+      private TasksFilterType currentFiltering;
+
+      public RequestValues(boolean mForceUpdate, TasksFilterType currentFiltering) {
+         this.forceUpdate = mForceUpdate;
+         this.currentFiltering = currentFiltering;
+      }
+
+      public boolean isForceUpdate() {
+         return forceUpdate;
+      }
+   }
+
+
 }

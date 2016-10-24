@@ -63,7 +63,7 @@ public class TaskDetailActivity extends AppCompatActivity {
                 Injection.provideUseCaseHandler(),
                 taskId,
                 taskDetailFragment,
-                Injection.provideGetTask(getApplicationContext(),taskId),
+                Injection.provideGetTask(getApplicationContext()),
                 Injection.provideCompleteTasks(getApplicationContext()),
                 Injection.provideActivateTask(getApplicationContext()),
                 Injection.provideDeleteTask(getApplicationContext()));

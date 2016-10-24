@@ -30,21 +30,30 @@ import static com.google.common.base.Preconditions.checkNotNull;
 /**
  * Retrieves a {@link Task} from the {@link TasksRepository}.
  */
-public class GetTask extends UseCaseRx {
+public class GetTask extends UseCaseRx<GetTask.RequestValues> {
 
     private final TasksRepository tasksRepository;
-    private String taskId;
 
 
-    public GetTask(Scheduler threadExecutor, Scheduler postExecutionThread, @NonNull TasksRepository tasksRepository, String taskId) {
+    public GetTask(Scheduler threadExecutor, Scheduler postExecutionThread, @NonNull TasksRepository tasksRepository) {
         super(threadExecutor, postExecutionThread);
         this.tasksRepository=checkNotNull(tasksRepository, "tasksRepository cannot be null!");
-        this.taskId = taskId;
     }
 
     @Override
-    protected Observable<Task> buildUseCaseObservable() {
-        return tasksRepository.getTask(taskId);
+    protected Observable buildUseCaseObservable(GetTask.RequestValues requestValues) {
+        return tasksRepository.getTask(requestValues.getTaskId());
     }
 
+    public static final class RequestValues extends UseCaseRx.RequestValues {
+        private final String mTaskId;
+
+        public RequestValues(@NonNull String taskId) {
+            mTaskId = checkNotNull(taskId, "taskId cannot be null!");
+        }
+
+        public String getTaskId() {
+            return mTaskId;
+        }
+    }
 }

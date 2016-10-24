@@ -27,7 +27,9 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import rx.Completable;
 import rx.Observable;
+import rx.functions.Action0;
 import rx.functions.Func1;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -134,28 +136,35 @@ public class TasksRepository implements TasksDataSource {
    }
 
    @Override
-   public void completeTask(@NonNull Task task) {
+   public Completable completeTask(@NonNull final Task task) {
       checkNotNull(task);
-      mTasksRemoteDataSource.completeTask(task);
-      mTasksLocalDataSource.completeTask(task);
 
-      Task completedTask = new Task(task.getTitle(), task.getDescription(), task.getId(), true);
+      return mTasksRemoteDataSource.completeTask(task)
+            .merge(mTasksLocalDataSource.completeTask(task))
+            .doOnCompleted(new Action0() {
+               @Override
+               public void call() {
+                  Task completedTask = new Task(task.getTitle(), task.getDescription(), task.getId(), true);
 
-      // Do in memory cache update to keep the app UI up to date
-      if (mCachedTasks == null) {
-         mCachedTasks = new LinkedHashMap<>();
-      }
-      mCachedTasks.put(task.getId(), completedTask);
+                  // Do in memory cache update to keep the app UI up to date
+                  if (mCachedTasks == null) {
+                     mCachedTasks = new LinkedHashMap<>();
+                  }
+                  mCachedTasks.put(task.getId(), completedTask);
+               }
+            });
+
    }
 
    @Override
-   public void completeTask(@NonNull String taskId) {
+   public Completable completeTask(@NonNull String taskId) {
       checkNotNull(taskId);
-      completeTask(getTaskWithId(taskId));
+      return completeTask(getTaskWithId(taskId));
    }
 
    @Override
    public void activateTask(@NonNull Task task) {
+
       checkNotNull(task);
       mTasksRemoteDataSource.activateTask(task);
       mTasksLocalDataSource.activateTask(task);
@@ -176,63 +185,27 @@ public class TasksRepository implements TasksDataSource {
    }
 
    @Override
-   public void clearCompletedTasks() {
-      mTasksRemoteDataSource.clearCompletedTasks();
-      mTasksLocalDataSource.clearCompletedTasks();
+   public Completable clearCompletedTasks() {
+      return mTasksRemoteDataSource.clearCompletedTasks()
+            .mergeWith(mTasksLocalDataSource.clearCompletedTasks())
+            .doOnCompleted(new Action0() {
+               @Override
+               public void call() {
+                  // Do in memory cache update to keep the app UI up to date
+                  if (mCachedTasks == null) {
+                     mCachedTasks = new LinkedHashMap<>();
+                  }
+                  Iterator<Map.Entry<String, Task>> it = mCachedTasks.entrySet().iterator();
+                  while (it.hasNext()) {
+                     Map.Entry<String, Task> entry = it.next();
+                     if (entry.getValue().isCompleted()) {
+                        it.remove();
+                     }
+                  }
+               }
+            });
 
-      // Do in memory cache update to keep the app UI up to date
-      if (mCachedTasks == null) {
-         mCachedTasks = new LinkedHashMap<>();
-      }
-      Iterator<Map.Entry<String, Task>> it = mCachedTasks.entrySet().iterator();
-      while (it.hasNext()) {
-         Map.Entry<String, Task> entry = it.next();
-         if (entry.getValue().isCompleted()) {
-            it.remove();
-         }
-      }
    }
-
-//
-//   @Override
-//   public void getTask(@NonNull final String taskId, @NonNull final GetTaskCallback callback) {
-//      checkNotNull(taskId);
-//      checkNotNull(callback);
-//
-//      Task cachedTask = getTaskWithId(taskId);
-//
-//      // Respond immediately with cache if available
-//      if (cachedTask != null) {
-//         callback.onTaskLoaded(cachedTask);
-//         return;
-//      }
-//
-//      // Load from server/persisted if needed.
-//
-//      // Is the task in the local data source? If not, query the network.
-//      mTasksLocalDataSource.getTask(taskId, new GetTaskCallback() {
-//         @Override
-//         public void onTaskLoaded(Task task) {
-//            callback.onTaskLoaded(task);
-//         }
-//
-//         @Override
-//         public void onDataNotAvailable() {
-//            mTasksRemoteDataSource.getTask(taskId, new GetTaskCallback() {
-//               @Override
-//               public void onTaskLoaded(Task task) {
-//                  callback.onTaskLoaded(task);
-//               }
-//
-//               @Override
-//               public void onDataNotAvailable() {
-//                  callback.onDataNotAvailable();
-//               }
-//            });
-//         }
-//      });
-//   }
-
 
    /**
     * Gets tasks from local data source (sqlite) unless the table is new or empty. In that case it

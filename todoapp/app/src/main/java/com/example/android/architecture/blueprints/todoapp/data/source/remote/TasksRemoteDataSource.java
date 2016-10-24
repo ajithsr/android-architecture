@@ -28,6 +28,8 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+import rx.Completable;
+import rx.CompletableSubscriber;
 import rx.Observable;
 
 /**
@@ -84,15 +86,22 @@ public class TasksRemoteDataSource implements TasksDataSource {
     }
 
     @Override
-    public void completeTask(@NonNull Task task) {
-        Task completedTask = new Task(task.getTitle(), task.getDescription(), task.getId(), true);
-        TASKS_SERVICE_DATA.put(task.getId(), completedTask);
+    public Completable completeTask(@NonNull final Task task) {
+        return Completable.create(new Completable.OnSubscribe() {
+            @Override
+            public void call(CompletableSubscriber completableSubscriber) {
+                Task completedTask = new Task(task.getTitle(), task.getDescription(), task.getId(), true);
+                TASKS_SERVICE_DATA.put(task.getId(), completedTask);
+                completableSubscriber.onCompleted();
+            }
+        });
     }
 
     @Override
-    public void completeTask(@NonNull String taskId) {
+    public Completable completeTask(@NonNull String taskId) {
         // Not required for the remote data source because the {@link TasksRepository} handles
         // converting from a {@code taskId} to a {@link task} using its cached data.
+        return null;
     }
 
     @Override
@@ -108,14 +117,20 @@ public class TasksRemoteDataSource implements TasksDataSource {
     }
 
     @Override
-    public void clearCompletedTasks() {
-        Iterator<Map.Entry<String, Task>> it = TASKS_SERVICE_DATA.entrySet().iterator();
-        while (it.hasNext()) {
-            Map.Entry<String, Task> entry = it.next();
-            if (entry.getValue().isCompleted()) {
-                it.remove();
+    public Completable clearCompletedTasks() {
+        return Completable.create(new Completable.OnSubscribe() {
+            @Override
+            public void call(CompletableSubscriber completableSubscriber) {
+                Iterator<Map.Entry<String, Task>> it = TASKS_SERVICE_DATA.entrySet().iterator();
+                while (it.hasNext()) {
+                    Map.Entry<String, Task> entry = it.next();
+                    if (entry.getValue().isCompleted()) {
+                        it.remove();
+                    }
+                }
+                completableSubscriber.onCompleted();
             }
-        }
+        });
     }
 
     @Override

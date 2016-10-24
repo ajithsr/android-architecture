@@ -43,217 +43,226 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class TasksPresenter implements TasksContract.Presenter {
 
 
-    private final TasksContract.View mTasksView;
-    private final GetTasks mGetTasks;
-    private final CompleteTask mCompleteTask;
-    private final ActivateTask mActivateTask;
-    private final ClearCompleteTasks mClearCompleteTasks;
+   private final TasksContract.View mTasksView;
+   private final GetTasks mGetTasks;
+   private final CompleteTask mCompleteTask;
+   private final ActivateTask mActivateTask;
+   private final ClearCompleteTasks mClearCompleteTasks;
 
-    private TasksFilterType mCurrentFiltering = TasksFilterType.ALL_TASKS;
+   private TasksFilterType currentFiltering = TasksFilterType.ALL_TASKS;
 
-    private boolean mFirstLoad = true;
+   private boolean mFirstLoad = true;
 
-    private final UseCaseHandler mUseCaseHandler;
+   private final UseCaseHandler mUseCaseHandler;
 
-    public TasksPresenter(@NonNull UseCaseHandler useCaseHandler,
-            @NonNull TasksContract.View tasksView, @NonNull GetTasks getTasks,
-            @NonNull CompleteTask completeTask, @NonNull ActivateTask activateTask,
-            @NonNull ClearCompleteTasks clearCompleteTasks) {
-        mUseCaseHandler = checkNotNull(useCaseHandler, "usecaseHandler cannot be null");
-        mTasksView = checkNotNull(tasksView, "tasksView cannot be null!");
-        mGetTasks = checkNotNull(getTasks, "getTask cannot be null!");
-        mCompleteTask = checkNotNull(completeTask, "completeTask cannot be null!");
-        mActivateTask = checkNotNull(activateTask, "activateTask cannot be null!");
-        mClearCompleteTasks = checkNotNull(clearCompleteTasks,
-                "clearCompleteTasks cannot be null!");
+   public TasksPresenter(@NonNull UseCaseHandler useCaseHandler,
+                         @NonNull TasksContract.View tasksView, @NonNull GetTasks getTasks,
+                         @NonNull CompleteTask completeTask, @NonNull ActivateTask activateTask,
+                         @NonNull ClearCompleteTasks clearCompleteTasks) {
+      mUseCaseHandler = checkNotNull(useCaseHandler, "usecaseHandler cannot be null");
+      mTasksView = checkNotNull(tasksView, "tasksView cannot be null!");
+      mGetTasks = checkNotNull(getTasks, "getTask cannot be null!");
+      mCompleteTask = checkNotNull(completeTask, "completeTask cannot be null!");
+      mActivateTask = checkNotNull(activateTask, "activateTask cannot be null!");
+      mClearCompleteTasks = checkNotNull(clearCompleteTasks,
+            "clearCompleteTasks cannot be null!");
 
 
-        mTasksView.setPresenter(this);
-    }
+      mTasksView.setPresenter(this);
+   }
 
-    @Override
-    public void start() {
-        loadTasks(false);
-    }
+   @Override
+   public void start() {
+      loadTasks(false);
+   }
 
-    @Override
-    public void onDestroyView() {
-        mGetTasks.unsubscribe();
-    }
+   @Override
+   public void onDestroyView() {
+      mGetTasks.unsubscribe();
+   }
 
-    @Override
-    public void result(int requestCode, int resultCode) {
-        // If a task was successfully added, show snackbar
-        if (AddEditTaskActivity.REQUEST_ADD_TASK == requestCode
-                && Activity.RESULT_OK == resultCode) {
-            mTasksView.showSuccessfullySavedMessage();
-        }
-    }
+   @Override
+   public void result(int requestCode, int resultCode) {
+      // If a task was successfully added, show snackbar
+      if (AddEditTaskActivity.REQUEST_ADD_TASK == requestCode
+            && Activity.RESULT_OK == resultCode) {
+         mTasksView.showSuccessfullySavedMessage();
+      }
+   }
 
-    @Override
-    public void loadTasks(boolean forceUpdate) {
-        // Simplification for sample: a network reload will be forced on first load.
-        loadTasks(forceUpdate || mFirstLoad, true);
-        mFirstLoad = false;
-    }
+   @Override
+   public void loadTasks(boolean forceUpdate) {
+      // Simplification for sample: a network reload will be forced on first load.
+      loadTasks(forceUpdate || mFirstLoad, true);
+      mFirstLoad = false;
+   }
 
-    /**
-     * @param forceUpdate   Pass in true to refresh the data in the {@link TasksDataSource}
-     * @param showLoadingUI Pass in true to display a loading icon in the UI
-     */
-    private void loadTasks(boolean forceUpdate, final boolean showLoadingUI) {
-        if (showLoadingUI) {
-            mTasksView.setLoadingIndicator(true);
-        }
+   /**
+    * @param forceUpdate   Pass in true to refresh the data in the {@link TasksDataSource}
+    * @param showLoadingUI Pass in true to display a loading icon in the UI
+    */
+   private void loadTasks(boolean forceUpdate, final boolean showLoadingUI) {
+      if (showLoadingUI) {
+         mTasksView.setLoadingIndicator(true);
+      }
 
-        mGetTasks.execute(new Subscriber<ArrayList<Task>>() {
-            @Override
-            public void onCompleted() {
+      mGetTasks.execute(new GetTasks.RequestValues(forceUpdate, currentFiltering),
+            new Subscriber<ArrayList<Task>>() {
+               @Override
+               public void onCompleted() {
 
-            }
+               }
 
-            @Override
-            public void onError(Throwable e) {
-                // The view may not be able to handle UI updates anymore
-                if (!mTasksView.isActive()) {
-                    return;
-                }
-                mTasksView.showLoadingTasksError();
-            }
+               @Override
+               public void onError(Throwable e) {
+                  // The view may not be able to handle UI updates anymore
+                  if (!mTasksView.isActive()) {
+                     return;
+                  }
+                  mTasksView.showLoadingTasksError();
+               }
 
-            @Override
-            public void onNext(ArrayList<Task> tasks) {
-                if (!mTasksView.isActive()) {
-                    return;
-                }
-                if (showLoadingUI) {
-                    mTasksView.setLoadingIndicator(false);
-                }
-                processTasks(tasks);
-            }
-        });
-    }
+               @Override
+               public void onNext(ArrayList<Task> tasks) {
+                  if (!mTasksView.isActive()) {
+                     return;
+                  }
+                  if (showLoadingUI) {
+                     mTasksView.setLoadingIndicator(false);
+                  }
+                  processTasks(tasks);
+               }
+            });
+   }
 
-    private void processTasks(List<Task> tasks) {
-        if (tasks.isEmpty()) {
-            // Show a message indicating there are no tasks for that filter type.
-            processEmptyTasks();
-        } else {
-            // Show the list of tasks
-            mTasksView.showTasks(tasks);
-            // Set the filter label's text.
-            showFilterLabel();
-        }
-    }
+   private void processTasks(List<Task> tasks) {
+      if (tasks.isEmpty()) {
+         // Show a message indicating there are no tasks for that filter type.
+         processEmptyTasks();
+      } else {
+         // Show the list of tasks
+         mTasksView.showTasks(tasks);
+         // Set the filter label's text.
+         showFilterLabel();
+      }
+   }
 
-    private void showFilterLabel() {
-        switch (mCurrentFiltering) {
-            case ACTIVE_TASKS:
-                mTasksView.showActiveFilterLabel();
-                break;
-            case COMPLETED_TASKS:
-                mTasksView.showCompletedFilterLabel();
-                break;
-            default:
-                mTasksView.showAllFilterLabel();
-                break;
-        }
-    }
+   private void showFilterLabel() {
+      switch (currentFiltering) {
+         case ACTIVE_TASKS:
+            mTasksView.showActiveFilterLabel();
+            break;
+         case COMPLETED_TASKS:
+            mTasksView.showCompletedFilterLabel();
+            break;
+         default:
+            mTasksView.showAllFilterLabel();
+            break;
+      }
+   }
 
-    private void processEmptyTasks() {
-        switch (mCurrentFiltering) {
-            case ACTIVE_TASKS:
-                mTasksView.showNoActiveTasks();
-                break;
-            case COMPLETED_TASKS:
-                mTasksView.showNoCompletedTasks();
-                break;
-            default:
-                mTasksView.showNoTasks();
-                break;
-        }
-    }
+   private void processEmptyTasks() {
+      switch (currentFiltering) {
+         case ACTIVE_TASKS:
+            mTasksView.showNoActiveTasks();
+            break;
+         case COMPLETED_TASKS:
+            mTasksView.showNoCompletedTasks();
+            break;
+         default:
+            mTasksView.showNoTasks();
+            break;
+      }
+   }
 
-    @Override
-    public void addNewTask() {
-        mTasksView.showAddTask();
-    }
+   @Override
+   public void addNewTask() {
+      mTasksView.showAddTask();
+   }
 
-    @Override
-    public void openTaskDetails(@NonNull Task requestedTask) {
-        checkNotNull(requestedTask, "requestedTask cannot be null!");
-        mTasksView.showTaskDetailsUi(requestedTask.getId());
-    }
+   @Override
+   public void openTaskDetails(@NonNull Task requestedTask) {
+      checkNotNull(requestedTask, "requestedTask cannot be null!");
+      mTasksView.showTaskDetailsUi(requestedTask.getId());
+   }
 
-    @Override
-    public void completeTask(@NonNull Task completedTask) {
-        checkNotNull(completedTask, "completedTask cannot be null!");
-        mUseCaseHandler.execute(mCompleteTask, new CompleteTask.RequestValues(
-                        completedTask.getId()),
-                new UseCase.UseCaseCallback<CompleteTask.ResponseValue>() {
-                    @Override
-                    public void onSuccess(CompleteTask.ResponseValue response) {
-                        mTasksView.showTaskMarkedComplete();
-                        loadTasks(false, false);
-                    }
+   @Override
+   public void completeTask(@NonNull Task completedTask) {
+      checkNotNull(completedTask, "completedTask cannot be null!");
 
-                    @Override
-                    public void onError() {
-                        mTasksView.showLoadingTasksError();
-                    }
-                });
-    }
+      mCompleteTask.execute(new CompleteTask.RequestValues(completedTask.getId()), new Subscriber() {
+         @Override
+         public void onCompleted() {
+            mTasksView.showTaskMarkedComplete();
+            loadTasks(false, false);
+         }
 
-    @Override
-    public void activateTask(@NonNull Task activeTask) {
-        checkNotNull(activeTask, "activeTask cannot be null!");
-        mUseCaseHandler.execute(mActivateTask, new ActivateTask.RequestValues(activeTask.getId()),
-                new UseCase.UseCaseCallback<ActivateTask.ResponseValue>() {
-                    @Override
-                    public void onSuccess(ActivateTask.ResponseValue response) {
-                        mTasksView.showTaskMarkedActive();
-                        loadTasks(false, false);
-                    }
+         @Override
+         public void onError(Throwable e) {
+            mTasksView.showLoadingTasksError();
+         }
 
-                    @Override
-                    public void onError() {
-                        mTasksView.showLoadingTasksError();
-                    }
-                });
-    }
+         @Override
+         public void onNext(Object o) {
 
-    @Override
-    public void clearCompletedTasks() {
-        mUseCaseHandler.execute(mClearCompleteTasks, new ClearCompleteTasks.RequestValues(),
-                new UseCase.UseCaseCallback<ClearCompleteTasks.ResponseValue>() {
-                    @Override
-                    public void onSuccess(ClearCompleteTasks.ResponseValue response) {
-                        mTasksView.showCompletedTasksCleared();
-                        loadTasks(false, false);
-                    }
+         }
+      });
+   }
 
-                    @Override
-                    public void onError() {
-                        mTasksView.showLoadingTasksError();
-                    }
-                });
-    }
+   @Override
+   public void activateTask(@NonNull Task activeTask) {
+      checkNotNull(activeTask, "activeTask cannot be null!");
+      mUseCaseHandler.execute(mActivateTask, new ActivateTask.RequestValues(activeTask.getId()),
+            new UseCase.UseCaseCallback<ActivateTask.ResponseValue>() {
+               @Override
+               public void onSuccess(ActivateTask.ResponseValue response) {
+                  mTasksView.showTaskMarkedActive();
+                  loadTasks(false, false);
+               }
 
-    /**
-     * Sets the current task filtering type.
-     *
-     * @param requestType Can be {@link TasksFilterType#ALL_TASKS},
-     *                    {@link TasksFilterType#COMPLETED_TASKS}, or
-     *                    {@link TasksFilterType#ACTIVE_TASKS}
-     */
-    @Override
-    public void setFiltering(TasksFilterType requestType) {
-        mCurrentFiltering = requestType;
-    }
+               @Override
+               public void onError() {
+                  mTasksView.showLoadingTasksError();
+               }
+            });
+   }
 
-    @Override
-    public TasksFilterType getFiltering() {
-        return mCurrentFiltering;
-    }
+   @Override
+   public void clearCompletedTasks() {
+      mClearCompleteTasks.execute(new ClearCompleteTasks.RequestValues(), new Subscriber() {
+         @Override
+         public void onCompleted() {
+            mTasksView.showCompletedTasksCleared();
+            loadTasks(false, false);
+         }
+
+         @Override
+         public void onError(Throwable e) {
+            mTasksView.showLoadingTasksError();
+         }
+
+         @Override
+         public void onNext(Object o) {
+
+         }
+      });
+   }
+
+   /**
+    * Sets the current task filtering type.
+    *
+    * @param requestType Can be {@link TasksFilterType#ALL_TASKS},
+    *                    {@link TasksFilterType#COMPLETED_TASKS}, or
+    *                    {@link TasksFilterType#ACTIVE_TASKS}
+    */
+   @Override
+   public void setFiltering(TasksFilterType requestType) {
+      currentFiltering = requestType;
+   }
+
+   @Override
+   public TasksFilterType getFiltering() {
+      return currentFiltering;
+   }
 
 }

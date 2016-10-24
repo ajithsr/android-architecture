@@ -45,7 +45,7 @@ public class AddEditTaskPresenter implements AddEditTaskContract.Presenter {
     private final UseCaseHandler mUseCaseHandler;
 
     @Nullable
-    private String mTaskId;
+    private String taskId;
 
     /**
      * Creates a presenter for the add/edit view.
@@ -57,7 +57,7 @@ public class AddEditTaskPresenter implements AddEditTaskContract.Presenter {
             @NonNull AddEditTaskContract.View addTaskView, @NonNull GetTask getTask,
             @NonNull SaveTask saveTask) {
         mUseCaseHandler = checkNotNull(useCaseHandler, "useCaseHandler cannot be null!");
-        mTaskId = taskId;
+        this.taskId = taskId;
         mAddTaskView = checkNotNull(addTaskView, "addTaskView cannot be null!");
         mGetTask = checkNotNull(getTask, "getTask cannot be null!");
         mSaveTask = checkNotNull(saveTask, "saveTask cannot be null!");
@@ -67,7 +67,7 @@ public class AddEditTaskPresenter implements AddEditTaskContract.Presenter {
 
     @Override
     public void start() {
-        if (mTaskId != null) {
+        if (taskId != null) {
             populateTask();
         }
     }
@@ -88,10 +88,10 @@ public class AddEditTaskPresenter implements AddEditTaskContract.Presenter {
 
     @Override
     public void populateTask() {
-        if (mTaskId == null) {
+        if (taskId == null) {
             throw new RuntimeException("populateTask() was called but task is new.");
         }
-       mGetTask.execute(new Subscriber<Task>() {
+       mGetTask.execute(new GetTask.RequestValues(taskId),new Subscriber<Task>() {
           @Override
           public void onCompleted() {
 
@@ -131,7 +131,7 @@ public class AddEditTaskPresenter implements AddEditTaskContract.Presenter {
     }
 
     private boolean isNewTask() {
-        return mTaskId == null;
+        return taskId == null;
     }
 
     private void createTask(String title, String description) {
@@ -155,10 +155,10 @@ public class AddEditTaskPresenter implements AddEditTaskContract.Presenter {
     }
 
     private void updateTask(String title, String description) {
-        if (mTaskId == null) {
+        if (taskId == null) {
             throw new RuntimeException("updateTask() was called but task is new.");
         }
-        Task newTask = new Task(title, description, mTaskId);
+        Task newTask = new Task(title, description, taskId);
         mUseCaseHandler.execute(mSaveTask, new SaveTask.RequestValues(newTask),
                 new UseCase.UseCaseCallback<SaveTask.ResponseValue>() {
                     @Override

@@ -28,6 +28,8 @@ import com.example.android.architecture.blueprints.todoapp.tasks.domain.model.Ta
 
 import java.util.ArrayList;
 
+import rx.Completable;
+import rx.CompletableSubscriber;
 import rx.Observable;
 import rx.Subscriber;
 
@@ -162,24 +164,31 @@ public class TasksLocalDataSource implements TasksDataSource {
    }
 
    @Override
-   public void completeTask(@NonNull Task task) {
-      SQLiteDatabase db = mDbHelper.getWritableDatabase();
+   public Completable completeTask(@NonNull final Task task) {
+     return Completable.create(new Completable.OnSubscribe() {
+         @Override
+         public void call(CompletableSubscriber completableSubscriber) {
+            SQLiteDatabase db = mDbHelper.getWritableDatabase();
 
-      ContentValues values = new ContentValues();
-      values.put(TaskEntry.COLUMN_NAME_COMPLETED, true);
+            ContentValues values = new ContentValues();
+            values.put(TaskEntry.COLUMN_NAME_COMPLETED, true);
 
-      String selection = TaskEntry.COLUMN_NAME_ENTRY_ID + " LIKE ?";
-      String[] selectionArgs = {task.getId()};
+            String selection = TaskEntry.COLUMN_NAME_ENTRY_ID + " LIKE ?";
+            String[] selectionArgs = {task.getId()};
 
-      db.update(TaskEntry.TABLE_NAME, values, selection, selectionArgs);
+            db.update(TaskEntry.TABLE_NAME, values, selection, selectionArgs);
 
-      db.close();
+            db.close();
+            completableSubscriber.onCompleted();
+         }
+      });
    }
 
    @Override
-   public void completeTask(@NonNull String taskId) {
+   public Completable completeTask(@NonNull String taskId) {
       // Not required for the local data source because the {@link TasksRepository} handles
       // converting from a {@code taskId} to a {@link task} using its cached data.
+      return null;
    }
 
    @Override
@@ -204,15 +213,22 @@ public class TasksLocalDataSource implements TasksDataSource {
    }
 
    @Override
-   public void clearCompletedTasks() {
-      SQLiteDatabase db = mDbHelper.getWritableDatabase();
+   public Completable clearCompletedTasks() {
+      return Completable.create(new Completable.OnSubscribe() {
+         @Override
+         public void call(CompletableSubscriber completableSubscriber) {
+            SQLiteDatabase db = mDbHelper.getWritableDatabase();
 
-      String selection = TaskEntry.COLUMN_NAME_COMPLETED + " LIKE ?";
-      String[] selectionArgs = {"1"};
+            String selection = TaskEntry.COLUMN_NAME_COMPLETED + " LIKE ?";
+            String[] selectionArgs = {"1"};
 
-      db.delete(TaskEntry.TABLE_NAME, selection, selectionArgs);
+            db.delete(TaskEntry.TABLE_NAME, selection, selectionArgs);
 
-      db.close();
+            db.close();
+            completableSubscriber.onCompleted();
+         }
+      });
+
    }
 
    @Override

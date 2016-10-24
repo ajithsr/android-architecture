@@ -74,12 +74,11 @@ public class Injection {
       return UseCaseHandler.getInstance();
    }
 
-   public static GetTask provideGetTask(@NonNull Context context,String taskId) {
+   public static GetTask provideGetTask(@NonNull Context context) {
       return new GetTask(
             Injection.provideThreadExecutor(),
             Injection.providePostExecutionThread(),
-            Injection.provideTasksRepository(context),
-            taskId);
+            Injection.provideTasksRepository(context));
    }
 
    public static SaveTask provideSaveTask(@NonNull Context context) {
@@ -87,7 +86,9 @@ public class Injection {
    }
 
    public static CompleteTask provideCompleteTasks(@NonNull Context context) {
-      return new CompleteTask(Injection.provideTasksRepository(context));
+      return new CompleteTask(Injection.provideThreadExecutor(),
+            Injection.providePostExecutionThread(),
+            Injection.provideTasksRepository(context));
    }
 
    public static ActivateTask provideActivateTask(@NonNull Context context) {
@@ -95,7 +96,7 @@ public class Injection {
    }
 
    public static ClearCompleteTasks provideClearCompleteTasks(@NonNull Context context) {
-      return new ClearCompleteTasks(Injection.provideTasksRepository(context));
+      return new ClearCompleteTasks(provideThreadExecutor(),providePostExecutionThread(),provideTasksRepository(context));
    }
 
    public static DeleteTask provideDeleteTask(@NonNull Context context) {
