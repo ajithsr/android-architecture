@@ -72,7 +72,7 @@ public class TaskDetailPresenter implements TaskDetailContract.Presenter {
 
    @Override
    public void onDestroyView() {
-
+      mGetTask.unsubscribe();
    }
 
    private void openTask() {

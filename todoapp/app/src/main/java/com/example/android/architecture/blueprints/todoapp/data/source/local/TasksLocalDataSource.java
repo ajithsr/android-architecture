@@ -98,10 +98,7 @@ public class TasksLocalDataSource implements TasksDataSource {
       });
    }
 
-   /**
-    * Note: {@link GetTaskCallback#onDataNotAvailable()} is fired if the {@link Task} isn't
-    * found.
-    */
+
    @Override
    public Observable<Task> getTask(@NonNull final String taskId) {
 

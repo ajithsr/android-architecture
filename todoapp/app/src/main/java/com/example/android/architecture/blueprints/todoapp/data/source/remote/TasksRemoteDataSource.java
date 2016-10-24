@@ -72,11 +72,7 @@ public class TasksRemoteDataSource implements TasksDataSource {
         return Observable.just(Lists.newArrayList(TASKS_SERVICE_DATA.values())).delay(SERVICE_LATENCY_IN_MILLIS, TimeUnit.MICROSECONDS);
     }
 
-    /**
-     * Note: {@link GetTaskCallback#onDataNotAvailable()} is never fired. In a real remote data
-     * source implementation, this would be fired if the server can't be contacted or the server
-     * returns an error.
-     */
+
     @Override
     public Observable<Task> getTask(@NonNull String taskId) {
         return Observable.just(TASKS_SERVICE_DATA.get(taskId)).delay(SERVICE_LATENCY_IN_MILLIS, TimeUnit.MICROSECONDS);

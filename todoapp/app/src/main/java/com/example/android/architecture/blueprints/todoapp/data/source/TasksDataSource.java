@@ -23,7 +23,6 @@ import com.example.android.architecture.blueprints.todoapp.tasks.domain.model.Ta
 import java.util.ArrayList;
 
 import rx.Observable;
-import rx.Single;
 
 /**
  * Main entry point for accessing tasks data.
@@ -34,13 +33,6 @@ import rx.Single;
  * operation on database or network should be executed in a different thread.
  */
 public interface TasksDataSource {
-
-    interface GetTaskCallback {
-
-        void onTaskLoaded(Task task);
-
-        void onDataNotAvailable();
-    }
 
     Observable<ArrayList<Task>> getTasks();
 

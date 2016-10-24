@@ -74,7 +74,7 @@ public class AddEditTaskPresenter implements AddEditTaskContract.Presenter {
 
    @Override
    public void onDestroyView() {
-
+      mGetTask.unsubscribe();
    }
 
    @Override
