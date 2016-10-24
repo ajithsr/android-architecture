@@ -19,29 +19,33 @@ package com.example.android.architecture.blueprints.todoapp.addedittask.domain.u
 import android.support.annotation.NonNull;
 
 import com.example.android.architecture.blueprints.todoapp.UseCase;
+import com.example.android.architecture.blueprints.todoapp.UseCaseRx;
 import com.example.android.architecture.blueprints.todoapp.tasks.domain.model.Task;
 import com.example.android.architecture.blueprints.todoapp.data.source.TasksRepository;
+
+import rx.Observable;
+import rx.Scheduler;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * Deletes a {@link Task} from the {@link TasksRepository}.
  */
-public class DeleteTask extends UseCase<DeleteTask.RequestValues, DeleteTask.ResponseValue> {
+public class DeleteTask extends UseCaseRx<DeleteTask.RequestValues> {
 
-    private final TasksRepository mTasksRepository;
+    private TasksRepository tasksRepository;
 
-    public DeleteTask(@NonNull TasksRepository tasksRepository) {
-        mTasksRepository = checkNotNull(tasksRepository, "tasksRepository cannot be null!");
+    public DeleteTask(Scheduler threadExecutor, Scheduler postExecutionThread, @NonNull TasksRepository tasksRepository) {
+        super(threadExecutor, postExecutionThread);
+        this.tasksRepository = tasksRepository;
     }
 
     @Override
-    protected void executeUseCase(final RequestValues values) {
-        mTasksRepository.deleteTask(values.getTaskId());
-        getUseCaseCallback().onSuccess(new ResponseValue());
+    protected Observable buildUseCaseObservable(RequestValues requestValues) {
+        return tasksRepository.deleteTask(requestValues.getTaskId()).toObservable();
     }
 
-    public static final class RequestValues implements UseCase.RequestValues {
+    public static final class RequestValues extends UseCaseRx.RequestValues {
         private final String mTaskId;
 
         public RequestValues(@NonNull String taskId) {

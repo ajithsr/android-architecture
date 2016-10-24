@@ -18,10 +18,10 @@ package com.example.android.architecture.blueprints.todoapp.statistics;
 
 import android.support.annotation.NonNull;
 
-import com.example.android.architecture.blueprints.todoapp.UseCase;
-import com.example.android.architecture.blueprints.todoapp.UseCaseHandler;
 import com.example.android.architecture.blueprints.todoapp.statistics.domain.model.Statistics;
 import com.example.android.architecture.blueprints.todoapp.statistics.domain.usecase.GetStatistics;
+
+import rx.Subscriber;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -32,16 +32,13 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class StatisticsPresenter implements StatisticsContract.Presenter {
 
     private final StatisticsContract.View mStatisticsView;
-    private final UseCaseHandler mUseCaseHandler;
-    private final GetStatistics mGetStatistics;
+    private final GetStatistics getStatistics;
 
     public StatisticsPresenter(
-            @NonNull UseCaseHandler useCaseHandler,
             @NonNull StatisticsContract.View statisticsView,
             @NonNull GetStatistics getStatistics) {
-        mUseCaseHandler = checkNotNull(useCaseHandler, "useCaseHandler cannot be null!");
         mStatisticsView = checkNotNull(statisticsView, "StatisticsView cannot be null!");
-        mGetStatistics = checkNotNull(getStatistics,"getStatistics cannot be null!");
+        this.getStatistics = checkNotNull(getStatistics,"getStatistics cannot be null!");
 
         mStatisticsView.setPresenter(this);
     }
@@ -53,33 +50,35 @@ public class StatisticsPresenter implements StatisticsContract.Presenter {
 
     @Override
     public void onDestroyView() {
-
+        getStatistics.unsubscribe();
     }
 
     private void loadStatistics() {
         mStatisticsView.setProgressIndicator(true);
 
-        mUseCaseHandler.execute(mGetStatistics, new GetStatistics.RequestValues(),
-                new UseCase.UseCaseCallback<GetStatistics.ResponseValue>() {
+        getStatistics.execute(new GetStatistics.RequestValues(), new Subscriber<Statistics>() {
             @Override
-            public void onSuccess(GetStatistics.ResponseValue response) {
-                Statistics statistics = response.getStatistics();
-                // The view may not be able to handle UI updates anymore
-                if (!mStatisticsView.isActive()) {
-                    return;
-                }
-                mStatisticsView.setProgressIndicator(false);
+            public void onCompleted() {
 
-                mStatisticsView.showStatistics(statistics.getActiveTasks(), statistics.getCompletedTasks());
             }
 
             @Override
-            public void onError() {
+            public void onError(Throwable e) {
                 // The view may not be able to handle UI updates anymore
                 if (!mStatisticsView.isActive()) {
                     return;
                 }
                 mStatisticsView.showLoadingStatisticsError();
+            }
+
+            @Override
+            public void onNext(Statistics statistics) {
+                // The view may not be able to handle UI updates anymore
+                if (!mStatisticsView.isActive()) {
+                    return;
+                }
+                mStatisticsView.setProgressIndicator(false);
+                mStatisticsView.showStatistics(statistics.getActiveTasks(), statistics.getCompletedTasks());
             }
         });
     }

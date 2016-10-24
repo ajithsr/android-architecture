@@ -19,8 +19,6 @@ package com.example.android.architecture.blueprints.todoapp.tasks;
 import android.app.Activity;
 import android.support.annotation.NonNull;
 
-import com.example.android.architecture.blueprints.todoapp.UseCase;
-import com.example.android.architecture.blueprints.todoapp.UseCaseHandler;
 import com.example.android.architecture.blueprints.todoapp.addedittask.AddEditTaskActivity;
 import com.example.android.architecture.blueprints.todoapp.data.source.TasksDataSource;
 import com.example.android.architecture.blueprints.todoapp.tasks.domain.model.Task;
@@ -44,27 +42,25 @@ public class TasksPresenter implements TasksContract.Presenter {
 
 
    private final TasksContract.View mTasksView;
-   private final GetTasks mGetTasks;
+   private final GetTasks getTasks;
    private final CompleteTask mCompleteTask;
-   private final ActivateTask mActivateTask;
-   private final ClearCompleteTasks mClearCompleteTasks;
+   private final ActivateTask activateTask;
+   private final ClearCompleteTasks clearCompleteTasks;
 
    private TasksFilterType currentFiltering = TasksFilterType.ALL_TASKS;
 
    private boolean mFirstLoad = true;
 
-   private final UseCaseHandler mUseCaseHandler;
 
-   public TasksPresenter(@NonNull UseCaseHandler useCaseHandler,
+   public TasksPresenter(
                          @NonNull TasksContract.View tasksView, @NonNull GetTasks getTasks,
                          @NonNull CompleteTask completeTask, @NonNull ActivateTask activateTask,
                          @NonNull ClearCompleteTasks clearCompleteTasks) {
-      mUseCaseHandler = checkNotNull(useCaseHandler, "usecaseHandler cannot be null");
       mTasksView = checkNotNull(tasksView, "tasksView cannot be null!");
-      mGetTasks = checkNotNull(getTasks, "getTask cannot be null!");
+      this.getTasks = checkNotNull(getTasks, "getTask cannot be null!");
       mCompleteTask = checkNotNull(completeTask, "completeTask cannot be null!");
-      mActivateTask = checkNotNull(activateTask, "activateTask cannot be null!");
-      mClearCompleteTasks = checkNotNull(clearCompleteTasks,
+      this.activateTask = checkNotNull(activateTask, "activateTask cannot be null!");
+      this.clearCompleteTasks = checkNotNull(clearCompleteTasks,
             "clearCompleteTasks cannot be null!");
 
 
@@ -78,7 +74,8 @@ public class TasksPresenter implements TasksContract.Presenter {
 
    @Override
    public void onDestroyView() {
-      mGetTasks.unsubscribe();
+      getTasks.unsubscribe();
+      activateTask.unsubscribe();
    }
 
    @Override
@@ -106,7 +103,7 @@ public class TasksPresenter implements TasksContract.Presenter {
          mTasksView.setLoadingIndicator(true);
       }
 
-      mGetTasks.execute(new GetTasks.RequestValues(forceUpdate, currentFiltering),
+      getTasks.execute(new GetTasks.RequestValues(forceUpdate, currentFiltering),
             new Subscriber<ArrayList<Task>>() {
                @Override
                public void onCompleted() {
@@ -209,27 +206,32 @@ public class TasksPresenter implements TasksContract.Presenter {
       });
    }
 
+
    @Override
    public void activateTask(@NonNull Task activeTask) {
       checkNotNull(activeTask, "activeTask cannot be null!");
-      mUseCaseHandler.execute(mActivateTask, new ActivateTask.RequestValues(activeTask.getId()),
-            new UseCase.UseCaseCallback<ActivateTask.ResponseValue>() {
-               @Override
-               public void onSuccess(ActivateTask.ResponseValue response) {
-                  mTasksView.showTaskMarkedActive();
-                  loadTasks(false, false);
-               }
+      activateTask.execute(new ActivateTask.RequestValues(activeTask.getId()), new Subscriber() {
+         @Override
+         public void onCompleted() {
+            mTasksView.showTaskMarkedActive();
+            loadTasks(false, false);
+         }
 
-               @Override
-               public void onError() {
-                  mTasksView.showLoadingTasksError();
-               }
-            });
+         @Override
+         public void onError(Throwable e) {
+
+         }
+
+         @Override
+         public void onNext(Object o) {
+
+         }
+      });
    }
 
    @Override
    public void clearCompletedTasks() {
-      mClearCompleteTasks.execute(new ClearCompleteTasks.RequestValues(), new Subscriber() {
+      clearCompleteTasks.execute(new ClearCompleteTasks.RequestValues(), new Subscriber() {
          @Override
          public void onCompleted() {
             mTasksView.showCompletedTasksCleared();

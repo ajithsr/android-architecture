@@ -105,15 +105,22 @@ public class TasksRemoteDataSource implements TasksDataSource {
     }
 
     @Override
-    public void activateTask(@NonNull Task task) {
-        Task activeTask = new Task(task.getTitle(), task.getDescription(), task.getId());
-        TASKS_SERVICE_DATA.put(task.getId(), activeTask);
+    public Completable activateTask(@NonNull final Task task) {
+        return Completable.create(new Completable.OnSubscribe() {
+            @Override
+            public void call(CompletableSubscriber completableSubscriber) {
+                Task activeTask = new Task(task.getTitle(), task.getDescription(), task.getId());
+                TASKS_SERVICE_DATA.put(task.getId(), activeTask);
+                completableSubscriber.onCompleted();
+            }
+        });
     }
 
     @Override
-    public void activateTask(@NonNull String taskId) {
+    public Completable activateTask(@NonNull String taskId) {
         // Not required for the remote data source because the {@link TasksRepository} handles
         // converting from a {@code taskId} to a {@link task} using its cached data.
+        return null;
     }
 
     @Override
@@ -145,7 +152,13 @@ public class TasksRemoteDataSource implements TasksDataSource {
     }
 
     @Override
-    public void deleteTask(@NonNull String taskId) {
-        TASKS_SERVICE_DATA.remove(taskId);
+    public Completable deleteTask(@NonNull final String taskId) {
+        return Completable.create(new Completable.OnSubscribe() {
+            @Override
+            public void call(CompletableSubscriber completableSubscriber) {
+                TASKS_SERVICE_DATA.remove(taskId);
+            }
+        });
+
     }
 }

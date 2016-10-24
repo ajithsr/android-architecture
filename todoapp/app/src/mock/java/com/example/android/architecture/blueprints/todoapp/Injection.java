@@ -92,7 +92,7 @@ public class Injection {
    }
 
    public static ActivateTask provideActivateTask(@NonNull Context context) {
-      return new ActivateTask(Injection.provideTasksRepository(context));
+      return new ActivateTask(provideThreadExecutor(),providePostExecutionThread(),Injection.provideTasksRepository(context));
    }
 
    public static ClearCompleteTasks provideClearCompleteTasks(@NonNull Context context) {
@@ -100,10 +100,10 @@ public class Injection {
    }
 
    public static DeleteTask provideDeleteTask(@NonNull Context context) {
-      return new DeleteTask(Injection.provideTasksRepository(context));
+      return new DeleteTask(provideThreadExecutor(),providePostExecutionThread(),Injection.provideTasksRepository(context));
    }
 
    public static GetStatistics provideGetStatistics(@NonNull Context context) {
-      return new GetStatistics(Injection.provideTasksRepository(context));
+      return new GetStatistics(provideThreadExecutor(),providePostExecutionThread(),Injection.provideTasksRepository(context));
    }
 }

@@ -192,24 +192,31 @@ public class TasksLocalDataSource implements TasksDataSource {
    }
 
    @Override
-   public void activateTask(@NonNull Task task) {
-      SQLiteDatabase db = mDbHelper.getWritableDatabase();
+   public Completable activateTask(@NonNull final Task task) {
+      return Completable.create(new Completable.OnSubscribe() {
+         @Override
+         public void call(CompletableSubscriber completableSubscriber) {
+            SQLiteDatabase db = mDbHelper.getWritableDatabase();
 
-      ContentValues values = new ContentValues();
-      values.put(TaskEntry.COLUMN_NAME_COMPLETED, false);
+            ContentValues values = new ContentValues();
+            values.put(TaskEntry.COLUMN_NAME_COMPLETED, false);
 
-      String selection = TaskEntry.COLUMN_NAME_ENTRY_ID + " LIKE ?";
-      String[] selectionArgs = {task.getId()};
+            String selection = TaskEntry.COLUMN_NAME_ENTRY_ID + " LIKE ?";
+            String[] selectionArgs = {task.getId()};
 
-      db.update(TaskEntry.TABLE_NAME, values, selection, selectionArgs);
+            db.update(TaskEntry.TABLE_NAME, values, selection, selectionArgs);
 
-      db.close();
+            db.close();
+         }
+      });
+
    }
 
    @Override
-   public void activateTask(@NonNull String taskId) {
+   public Completable activateTask(@NonNull String taskId) {
       // Not required for the local data source because the {@link TasksRepository} handles
       // converting from a {@code taskId} to a {@link task} using its cached data.
+      return null;
    }
 
    @Override
@@ -247,14 +254,20 @@ public class TasksLocalDataSource implements TasksDataSource {
    }
 
    @Override
-   public void deleteTask(@NonNull String taskId) {
-      SQLiteDatabase db = mDbHelper.getWritableDatabase();
+   public Completable deleteTask(@NonNull final String taskId) {
+      return Completable.create(new Completable.OnSubscribe() {
+         @Override
+         public void call(CompletableSubscriber completableSubscriber) {
+            SQLiteDatabase db = mDbHelper.getWritableDatabase();
 
-      String selection = TaskEntry.COLUMN_NAME_ENTRY_ID + " LIKE ?";
-      String[] selectionArgs = {taskId};
+            String selection = TaskEntry.COLUMN_NAME_ENTRY_ID + " LIKE ?";
+            String[] selectionArgs = {taskId};
 
-      db.delete(TaskEntry.TABLE_NAME, selection, selectionArgs);
+            db.delete(TaskEntry.TABLE_NAME, selection, selectionArgs);
 
-      db.close();
+            db.close();
+         }
+      });
+
    }
 }

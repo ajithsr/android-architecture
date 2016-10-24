@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.Map;
 
 import rx.Completable;
+import rx.CompletableSubscriber;
 import rx.Observable;
 import rx.functions.Action0;
 import rx.functions.Func1;
@@ -163,25 +164,29 @@ public class TasksRepository implements TasksDataSource {
    }
 
    @Override
-   public void activateTask(@NonNull Task task) {
-
+   public Completable activateTask(@NonNull final Task task) {
       checkNotNull(task);
-      mTasksRemoteDataSource.activateTask(task);
-      mTasksLocalDataSource.activateTask(task);
 
-      Task activeTask = new Task(task.getTitle(), task.getDescription(), task.getId());
+      return mTasksRemoteDataSource.activateTask(task)
+            .mergeWith(mTasksLocalDataSource.activateTask(task))
+            .doOnCompleted(new Action0() {
+               @Override
+               public void call() {
+                  Task activeTask = new Task(task.getTitle(), task.getDescription(), task.getId());
 
-      // Do in memory cache update to keep the app UI up to date
-      if (mCachedTasks == null) {
-         mCachedTasks = new LinkedHashMap<>();
-      }
-      mCachedTasks.put(task.getId(), activeTask);
+                  // Do in memory cache update to keep the app UI up to date
+                  if (mCachedTasks == null) {
+                     mCachedTasks = new LinkedHashMap<>();
+                  }
+                  mCachedTasks.put(task.getId(), activeTask);
+               }
+            });
    }
 
    @Override
-   public void activateTask(@NonNull String taskId) {
+   public Completable activateTask(@NonNull String taskId) {
       checkNotNull(taskId);
-      activateTask(getTaskWithId(taskId));
+      return activateTask(getTaskWithId(taskId));
    }
 
    @Override
@@ -242,11 +247,18 @@ public class TasksRepository implements TasksDataSource {
    }
 
    @Override
-   public void deleteTask(@NonNull String taskId) {
-      mTasksRemoteDataSource.deleteTask(checkNotNull(taskId));
-      mTasksLocalDataSource.deleteTask(checkNotNull(taskId));
+   public Completable deleteTask(@NonNull final String taskId) {
+      return Completable.create(new Completable.OnSubscribe() {
+         @Override
+         public void call(CompletableSubscriber completableSubscriber) {
+            mTasksRemoteDataSource.deleteTask(checkNotNull(taskId));
+            mTasksLocalDataSource.deleteTask(checkNotNull(taskId));
+            mCachedTasks.remove(taskId);
 
-      mCachedTasks.remove(taskId);
+            completableSubscriber.onCompleted();
+         }
+      });
+
    }
 
    private Observable<ArrayList<Task>> getTasksFromRemoteDataSource() {
