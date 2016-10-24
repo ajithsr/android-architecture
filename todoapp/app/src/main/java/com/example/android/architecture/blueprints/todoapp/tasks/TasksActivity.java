@@ -138,4 +138,10 @@ public class TasksActivity extends AppCompatActivity {
     public IdlingResource getCountingIdlingResource() {
         return EspressoIdlingResource.getIdlingResource();
     }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        mTasksPresenter.onDestroyView();
+    }
 }

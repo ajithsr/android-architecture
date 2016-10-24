@@ -16,22 +16,25 @@
 
 package com.example.android.architecture.blueprints.todoapp.tasks;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
 import android.app.Activity;
 import android.support.annotation.NonNull;
 
 import com.example.android.architecture.blueprints.todoapp.UseCase;
 import com.example.android.architecture.blueprints.todoapp.UseCaseHandler;
 import com.example.android.architecture.blueprints.todoapp.addedittask.AddEditTaskActivity;
-import com.example.android.architecture.blueprints.todoapp.tasks.domain.model.Task;
 import com.example.android.architecture.blueprints.todoapp.data.source.TasksDataSource;
+import com.example.android.architecture.blueprints.todoapp.tasks.domain.model.Task;
 import com.example.android.architecture.blueprints.todoapp.tasks.domain.usecase.ActivateTask;
 import com.example.android.architecture.blueprints.todoapp.tasks.domain.usecase.ClearCompleteTasks;
 import com.example.android.architecture.blueprints.todoapp.tasks.domain.usecase.CompleteTask;
 import com.example.android.architecture.blueprints.todoapp.tasks.domain.usecase.GetTasks;
 
+import java.util.ArrayList;
 import java.util.List;
+
+import rx.Subscriber;
+
+import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * Listens to user actions from the UI ({@link TasksFragment}), retrieves the data and updates the
@@ -74,6 +77,11 @@ public class TasksPresenter implements TasksContract.Presenter {
     }
 
     @Override
+    public void onDestroyView() {
+        mGetTasks.unsubscribe();
+    }
+
+    @Override
     public void result(int requestCode, int resultCode) {
         // If a task was successfully added, show snackbar
         if (AddEditTaskActivity.REQUEST_ADD_TASK == requestCode
@@ -97,35 +105,61 @@ public class TasksPresenter implements TasksContract.Presenter {
         if (showLoadingUI) {
             mTasksView.setLoadingIndicator(true);
         }
+//
+//        GetTasks.RequestValues requestValue = new GetTasks.RequestValues(forceUpdate,
+//                mCurrentFiltering);
 
-        GetTasks.RequestValues requestValue = new GetTasks.RequestValues(forceUpdate,
-                mCurrentFiltering);
+        mGetTasks.execute(new Subscriber<ArrayList<Task>>() {
+            @Override
+            public void onCompleted() {
 
-        mUseCaseHandler.execute(mGetTasks, requestValue,
-                new UseCase.UseCaseCallback<GetTasks.ResponseValue>() {
-                    @Override
-                    public void onSuccess(GetTasks.ResponseValue response) {
-                        List<Task> tasks = response.getTasks();
-                        // The view may not be able to handle UI updates anymore
-                        if (!mTasksView.isActive()) {
-                            return;
-                        }
-                        if (showLoadingUI) {
-                            mTasksView.setLoadingIndicator(false);
-                        }
+            }
 
-                        processTasks(tasks);
-                    }
+            @Override
+            public void onError(Throwable e) {
+                // The view may not be able to handle UI updates anymore
+                if (!mTasksView.isActive()) {
+                    return;
+                }
+                mTasksView.showLoadingTasksError();
+            }
 
-                    @Override
-                    public void onError() {
-                        // The view may not be able to handle UI updates anymore
-                        if (!mTasksView.isActive()) {
-                            return;
-                        }
-                        mTasksView.showLoadingTasksError();
-                    }
-                });
+            @Override
+            public void onNext(ArrayList<Task> tasks) {
+                if (!mTasksView.isActive()) {
+                    return;
+                }
+                if (showLoadingUI) {
+                    mTasksView.setLoadingIndicator(false);
+                }
+                processTasks(tasks);
+            }
+        });
+//        mUseCaseHandler.execute(mGetTasks, requestValue,
+//                new UseCase.UseCaseCallback<GetTasks.ResponseValue>() {
+//                    @Override
+//                    public void onSuccess(GetTasks.ResponseValue response) {
+//                        List<Task> tasks = response.getTasks();
+//                        // The view may not be able to handle UI updates anymore
+//                        if (!mTasksView.isActive()) {
+//                            return;
+//                        }
+//                        if (showLoadingUI) {
+//                            mTasksView.setLoadingIndicator(false);
+//                        }
+//
+//                        processTasks(tasks);
+//                    }
+//
+//                    @Override
+//                    public void onError() {
+//                        // The view may not be able to handle UI updates anymore
+//                        if (!mTasksView.isActive()) {
+//                            return;
+//                        }
+//                        mTasksView.showLoadingTasksError();
+//                    }
+//                });
     }
 
     private void processTasks(List<Task> tasks) {

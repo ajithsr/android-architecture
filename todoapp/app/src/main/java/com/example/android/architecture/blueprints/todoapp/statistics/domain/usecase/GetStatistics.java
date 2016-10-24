@@ -3,12 +3,9 @@ package com.example.android.architecture.blueprints.todoapp.statistics.domain.us
 import android.support.annotation.NonNull;
 
 import com.example.android.architecture.blueprints.todoapp.UseCase;
-import com.example.android.architecture.blueprints.todoapp.tasks.domain.model.Task;
-import com.example.android.architecture.blueprints.todoapp.data.source.TasksDataSource;
 import com.example.android.architecture.blueprints.todoapp.data.source.TasksRepository;
 import com.example.android.architecture.blueprints.todoapp.statistics.domain.model.Statistics;
-
-import java.util.List;
+import com.example.android.architecture.blueprints.todoapp.tasks.domain.model.Task;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -25,31 +22,31 @@ public class GetStatistics extends UseCase<GetStatistics.RequestValues, GetStati
 
     @Override
     protected void executeUseCase(RequestValues requestValues) {
-        mTasksRepository.getTasks(new TasksDataSource.LoadTasksCallback() {
-            @Override
-            public void onTasksLoaded(List<Task> tasks) {
-
-                int activeTasks = 0;
-                int completedTasks = 0;
-
-                // We calculate number of active and completed tasks
-                for (Task task : tasks) {
-                    if (task.isCompleted()) {
-                        completedTasks += 1;
-                    } else {
-                        activeTasks += 1;
-                    }
-                }
-
-                ResponseValue responseValue = new ResponseValue(new Statistics(completedTasks, activeTasks));
-                getUseCaseCallback().onSuccess(responseValue);
-            }
-
-            @Override
-            public void onDataNotAvailable() {
-                getUseCaseCallback().onError();
-            }
-        });
+//        mTasksRepository.getTasks(new TasksDataSource.LoadTasksCallback() {
+//            @Override
+//            public void onTasksLoaded(List<Task> tasks) {
+//
+//                int activeTasks = 0;
+//                int completedTasks = 0;
+//
+//                // We calculate number of active and completed tasks
+//                for (Task task : tasks) {
+//                    if (task.isCompleted()) {
+//                        completedTasks += 1;
+//                    } else {
+//                        activeTasks += 1;
+//                    }
+//                }
+//
+//                ResponseValue responseValue = new ResponseValue(new Statistics(completedTasks, activeTasks));
+//                getUseCaseCallback().onSuccess(responseValue);
+//            }
+//
+//            @Override
+//            public void onDataNotAvailable() {
+//                getUseCaseCallback().onError();
+//            }
+//        });
     }
 
     public static class RequestValues implements UseCase.RequestValues {

@@ -16,14 +16,14 @@
 
 package com.example.android.architecture.blueprints.todoapp.statistics;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
 import android.support.annotation.NonNull;
 
 import com.example.android.architecture.blueprints.todoapp.UseCase;
 import com.example.android.architecture.blueprints.todoapp.UseCaseHandler;
-import com.example.android.architecture.blueprints.todoapp.statistics.domain.usecase.GetStatistics;
 import com.example.android.architecture.blueprints.todoapp.statistics.domain.model.Statistics;
+import com.example.android.architecture.blueprints.todoapp.statistics.domain.usecase.GetStatistics;
+
+import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * Listens to user actions from the UI ({@link StatisticsFragment}), retrieves the data and updates
@@ -49,6 +49,11 @@ public class StatisticsPresenter implements StatisticsContract.Presenter {
     @Override
     public void start() {
         loadStatistics();
+    }
+
+    @Override
+    public void onDestroyView() {
+
     }
 
     private void loadStatistics() {

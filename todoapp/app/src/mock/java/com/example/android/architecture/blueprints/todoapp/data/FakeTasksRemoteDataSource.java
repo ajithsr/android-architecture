@@ -23,9 +23,12 @@ import com.example.android.architecture.blueprints.todoapp.data.source.TasksData
 import com.example.android.architecture.blueprints.todoapp.tasks.domain.model.Task;
 import com.google.common.collect.Lists;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
+
+import rx.Observable;
 
 /**
  * Implementation of a remote data source with static access to the data for easy testing.
@@ -47,8 +50,8 @@ public class FakeTasksRemoteDataSource implements TasksDataSource {
     }
 
     @Override
-    public void getTasks(@NonNull LoadTasksCallback callback) {
-        callback.onTasksLoaded(Lists.newArrayList(TASKS_SERVICE_DATA.values()));
+    public Observable<ArrayList<Task>> getTasks() {
+        return Observable.just(Lists.newArrayList(TASKS_SERVICE_DATA.values()));
     }
 
     @Override

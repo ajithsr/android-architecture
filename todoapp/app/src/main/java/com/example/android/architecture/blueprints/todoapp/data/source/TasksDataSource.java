@@ -20,7 +20,10 @@ import android.support.annotation.NonNull;
 
 import com.example.android.architecture.blueprints.todoapp.tasks.domain.model.Task;
 
+import java.util.ArrayList;
 import java.util.List;
+
+import rx.Observable;
 
 /**
  * Main entry point for accessing tasks data.
@@ -46,7 +49,7 @@ public interface TasksDataSource {
         void onDataNotAvailable();
     }
 
-    void getTasks(@NonNull LoadTasksCallback callback);
+    Observable<ArrayList<Task>> getTasks();
 
     void getTask(@NonNull String taskId, @NonNull GetTaskCallback callback);
 

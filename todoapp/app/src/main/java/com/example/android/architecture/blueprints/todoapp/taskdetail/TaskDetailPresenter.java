@@ -68,7 +68,12 @@ public class TaskDetailPresenter implements TaskDetailContract.Presenter {
         openTask();
     }
 
-    private void openTask() {
+   @Override
+   public void onDestroyView() {
+
+   }
+
+   private void openTask() {
         if (Strings.isNullOrEmpty(mTaskId)) {
             mTaskDetailView.showMissingTask();
             return;
