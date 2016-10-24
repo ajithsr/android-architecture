@@ -19,8 +19,6 @@ package com.example.android.architecture.blueprints.todoapp.addedittask;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
-import com.example.android.architecture.blueprints.todoapp.UseCase;
-import com.example.android.architecture.blueprints.todoapp.UseCaseHandler;
 import com.example.android.architecture.blueprints.todoapp.addedittask.domain.usecase.GetTask;
 import com.example.android.architecture.blueprints.todoapp.addedittask.domain.usecase.SaveTask;
 import com.example.android.architecture.blueprints.todoapp.tasks.domain.model.Task;
@@ -36,141 +34,149 @@ import static com.google.common.base.Preconditions.checkNotNull;
  */
 public class AddEditTaskPresenter implements AddEditTaskContract.Presenter {
 
-    private final AddEditTaskContract.View mAddTaskView;
+   private final AddEditTaskContract.View mAddTaskView;
 
-    private final GetTask mGetTask;
+   private final GetTask getTask;
 
-    private final SaveTask mSaveTask;
+   private final SaveTask saveTask;
 
-    private final UseCaseHandler mUseCaseHandler;
 
-    @Nullable
-    private String taskId;
+   @Nullable
+   private String taskId;
 
-    /**
-     * Creates a presenter for the add/edit view.
-     *
-     * @param taskId      ID of the task to edit or null for a new task
-     * @param addTaskView the add/edit view
-     */
-    public AddEditTaskPresenter(@NonNull UseCaseHandler useCaseHandler, @Nullable String taskId,
-            @NonNull AddEditTaskContract.View addTaskView, @NonNull GetTask getTask,
-            @NonNull SaveTask saveTask) {
-        mUseCaseHandler = checkNotNull(useCaseHandler, "useCaseHandler cannot be null!");
-        this.taskId = taskId;
-        mAddTaskView = checkNotNull(addTaskView, "addTaskView cannot be null!");
-        mGetTask = checkNotNull(getTask, "getTask cannot be null!");
-        mSaveTask = checkNotNull(saveTask, "saveTask cannot be null!");
+   /**
+    * Creates a presenter for the add/edit view.
+    *
+    * @param taskId      ID of the task to edit or null for a new task
+    * @param addTaskView the add/edit view
+    */
+   public AddEditTaskPresenter(@Nullable String taskId,
+                               @NonNull AddEditTaskContract.View addTaskView, @NonNull GetTask getTask,
+                               @NonNull SaveTask saveTask) {
+      this.taskId = taskId;
+      mAddTaskView = checkNotNull(addTaskView, "addTaskView cannot be null!");
+      this.getTask = checkNotNull(getTask, "getTask cannot be null!");
+      this.saveTask = checkNotNull(saveTask, "saveTask cannot be null!");
 
-        mAddTaskView.setPresenter(this);
-    }
-
-    @Override
-    public void start() {
-        if (taskId != null) {
-            populateTask();
-        }
-    }
-
-   @Override
-   public void onDestroyView() {
-      mGetTask.unsubscribe();
+      mAddTaskView.setPresenter(this);
    }
 
    @Override
-    public void saveTask(String title, String description) {
-        if (isNewTask()) {
-            createTask(title, description);
-        } else {
-            updateTask(title, description);
-        }
-    }
+   public void start() {
+      if (taskId != null) {
+         populateTask();
+      }
+   }
 
-    @Override
-    public void populateTask() {
-        if (taskId == null) {
-            throw new RuntimeException("populateTask() was called but task is new.");
-        }
-       mGetTask.execute(new GetTask.RequestValues(taskId),new Subscriber<Task>() {
-          @Override
-          public void onCompleted() {
+   @Override
+   public void onDestroyView() {
+      getTask.unsubscribe();
+      saveTask.unsubscribe();
 
-          }
+   }
 
-          @Override
-          public void onError(Throwable e) {
+   @Override
+   public void saveTask(String title, String description) {
+      if (isNewTask()) {
+         createTask(title, description);
+      } else {
+         updateTask(title, description);
+      }
+   }
 
-          }
+   @Override
+   public void populateTask() {
+      if (taskId == null) {
+         throw new RuntimeException("populateTask() was called but task is new.");
+      }
+      getTask.execute(new GetTask.RequestValues(taskId), new Subscriber<Task>() {
+         @Override
+         public void onCompleted() {
 
-          @Override
-          public void onNext(Task task) {
-             showTask(task);
-          }
+         }
 
-       });
+         @Override
+         public void onError(Throwable e) {
+            showEmptyTaskError();
+         }
 
-    }
+         @Override
+         public void onNext(Task task) {
+            showTask(task);
+         }
 
-    private void showTask(Task task) {
-        // The view may not be able to handle UI updates anymore
-        if (mAddTaskView.isActive()) {
-            mAddTaskView.setTitle(task.getTitle());
-            mAddTaskView.setDescription(task.getDescription());
-        }
-    }
+      });
 
-    private void showSaveError() {
-        // Show error, log, etc.
-    }
+   }
 
-    private void showEmptyTaskError() {
-        // The view may not be able to handle UI updates anymore
-        if (mAddTaskView.isActive()) {
-            mAddTaskView.showEmptyTaskError();
-        }
-    }
+   private void showTask(Task task) {
+      // The view may not be able to handle UI updates anymore
+      if (mAddTaskView.isActive()) {
+         mAddTaskView.setTitle(task.getTitle());
+         mAddTaskView.setDescription(task.getDescription());
+      }
+   }
 
-    private boolean isNewTask() {
-        return taskId == null;
-    }
+   private void showSaveError() {
+      // Show error, log, etc.
+   }
 
-    private void createTask(String title, String description) {
-        Task newTask = new Task(title, description);
-        if (newTask.isEmpty()) {
-            mAddTaskView.showEmptyTaskError();
-        } else {
-            mUseCaseHandler.execute(mSaveTask, new SaveTask.RequestValues(newTask),
-                    new UseCase.UseCaseCallback<SaveTask.ResponseValue>() {
-                        @Override
-                        public void onSuccess(SaveTask.ResponseValue response) {
-                            mAddTaskView.showTasksList();
-                        }
+   private void showEmptyTaskError() {
+      // The view may not be able to handle UI updates anymore
+      if (mAddTaskView.isActive()) {
+         mAddTaskView.showEmptyTaskError();
+      }
+   }
 
-                        @Override
-                        public void onError() {
-                            showSaveError();
-                        }
-                    });
-        }
-    }
+   private boolean isNewTask() {
+      return taskId == null;
+   }
 
-    private void updateTask(String title, String description) {
-        if (taskId == null) {
-            throw new RuntimeException("updateTask() was called but task is new.");
-        }
-        Task newTask = new Task(title, description, taskId);
-        mUseCaseHandler.execute(mSaveTask, new SaveTask.RequestValues(newTask),
-                new UseCase.UseCaseCallback<SaveTask.ResponseValue>() {
-                    @Override
-                    public void onSuccess(SaveTask.ResponseValue response) {
-                        // After an edit, go back to the list.
-                        mAddTaskView.showTasksList();
-                    }
+   private void createTask(String title, String description) {
+      Task newTask = new Task(title, description);
+      if (newTask.isEmpty()) {
+         mAddTaskView.showEmptyTaskError();
+      } else {
+         saveTask.execute(new SaveTask.RequestValues(newTask), new Subscriber() {
+            @Override
+            public void onCompleted() {
+               mAddTaskView.showTasksList();
+            }
 
-                    @Override
-                    public void onError() {
-                        showSaveError();
-                    }
-                });
-    }
+            @Override
+            public void onError(Throwable e) {
+               showSaveError();
+            }
+
+            @Override
+            public void onNext(Object o) {
+
+            }
+         });
+      }
+   }
+
+   private void updateTask(String title, String description) {
+      if (taskId == null) {
+         throw new RuntimeException("updateTask() was called but task is new.");
+      }
+      Task newTask = new Task(title, description, taskId);
+      saveTask.execute(new SaveTask.RequestValues(newTask), new Subscriber() {
+         @Override
+         public void onCompleted() {
+            // After an edit, go back to the list.
+            mAddTaskView.showTasksList();
+         }
+
+         @Override
+         public void onError(Throwable e) {
+            showSaveError();
+         }
+
+         @Override
+         public void onNext(Object o) {
+
+         }
+      });
+   }
 }

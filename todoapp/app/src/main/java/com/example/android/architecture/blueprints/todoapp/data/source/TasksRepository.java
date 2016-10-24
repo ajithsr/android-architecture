@@ -124,16 +124,24 @@ public class TasksRepository implements TasksDataSource {
 
 
    @Override
-   public void saveTask(@NonNull Task task) {
+   public Completable saveTask(@NonNull final Task task) {
       checkNotNull(task);
-      mTasksRemoteDataSource.saveTask(task);
-      mTasksLocalDataSource.saveTask(task);
+      return mTasksRemoteDataSource.saveTask(task)
+            .mergeWith(mTasksLocalDataSource.saveTask(task))
+            .doOnCompleted(new Action0() {
+               @Override
+               public void call() {
+                  mTasksRemoteDataSource.saveTask(task);
+                  mTasksLocalDataSource.saveTask(task);
 
-      // Do in memory cache update to keep the app UI up to date
-      if (mCachedTasks == null) {
-         mCachedTasks = new LinkedHashMap<>();
-      }
-      mCachedTasks.put(task.getId(), task);
+                  // Do in memory cache update to keep the app UI up to date
+                  if (mCachedTasks == null) {
+                     mCachedTasks = new LinkedHashMap<>();
+                  }
+                  mCachedTasks.put(task.getId(), task);
+               }
+            });
+
    }
 
    @Override

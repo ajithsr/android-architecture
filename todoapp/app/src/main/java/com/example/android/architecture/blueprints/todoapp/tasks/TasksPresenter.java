@@ -43,7 +43,7 @@ public class TasksPresenter implements TasksContract.Presenter {
 
    private final TasksContract.View mTasksView;
    private final GetTasks getTasks;
-   private final CompleteTask mCompleteTask;
+   private final CompleteTask completeTask;
    private final ActivateTask activateTask;
    private final ClearCompleteTasks clearCompleteTasks;
 
@@ -58,7 +58,7 @@ public class TasksPresenter implements TasksContract.Presenter {
                          @NonNull ClearCompleteTasks clearCompleteTasks) {
       mTasksView = checkNotNull(tasksView, "tasksView cannot be null!");
       this.getTasks = checkNotNull(getTasks, "getTask cannot be null!");
-      mCompleteTask = checkNotNull(completeTask, "completeTask cannot be null!");
+      this.completeTask = checkNotNull(completeTask, "completeTask cannot be null!");
       this.activateTask = checkNotNull(activateTask, "activateTask cannot be null!");
       this.clearCompleteTasks = checkNotNull(clearCompleteTasks,
             "clearCompleteTasks cannot be null!");
@@ -76,6 +76,8 @@ public class TasksPresenter implements TasksContract.Presenter {
    public void onDestroyView() {
       getTasks.unsubscribe();
       activateTask.unsubscribe();
+      completeTask.unsubscribe();
+      clearCompleteTasks.unsubscribe();
    }
 
    @Override
@@ -187,7 +189,7 @@ public class TasksPresenter implements TasksContract.Presenter {
    public void completeTask(@NonNull Task completedTask) {
       checkNotNull(completedTask, "completedTask cannot be null!");
 
-      mCompleteTask.execute(new CompleteTask.RequestValues(completedTask.getId()), new Subscriber() {
+      completeTask.execute(new CompleteTask.RequestValues(completedTask.getId()), new Subscriber() {
          @Override
          public void onCompleted() {
             mTasksView.showTaskMarkedComplete();

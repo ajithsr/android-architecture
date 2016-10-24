@@ -18,49 +18,40 @@ package com.example.android.architecture.blueprints.todoapp.addedittask.domain.u
 
 import android.support.annotation.NonNull;
 
-import com.example.android.architecture.blueprints.todoapp.UseCase;
-import com.example.android.architecture.blueprints.todoapp.tasks.domain.model.Task;
+import com.example.android.architecture.blueprints.todoapp.UseCaseRx;
 import com.example.android.architecture.blueprints.todoapp.data.source.TasksRepository;
+import com.example.android.architecture.blueprints.todoapp.tasks.domain.model.Task;
+
+import rx.Observable;
+import rx.Scheduler;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * Updates or creates a new {@link Task} in the {@link TasksRepository}.
  */
-public class SaveTask extends UseCase<SaveTask.RequestValues, SaveTask.ResponseValue> {
+public class SaveTask extends UseCaseRx<SaveTask.RequestValues> {
 
-    private final TasksRepository mTasksRepository;
 
-    public SaveTask(@NonNull TasksRepository tasksRepository) {
-        mTasksRepository = checkNotNull(tasksRepository, "tasksRepository cannot be null!");
+    private TasksRepository tasksRepository;
+
+    public SaveTask(Scheduler threadExecutor, Scheduler postExecutionThread, @NonNull TasksRepository tasksRepository) {
+        super(threadExecutor, postExecutionThread);
+
+        this.tasksRepository = tasksRepository;
     }
 
     @Override
-    protected void executeUseCase(final RequestValues values) {
-        Task task = values.getTask();
-        mTasksRepository.saveTask(task);
-
-        getUseCaseCallback().onSuccess(new ResponseValue(task));
+    protected Observable buildUseCaseObservable(RequestValues requestValues) {
+        Task task = requestValues.getTask();
+        return tasksRepository.saveTask(task).toObservable();
     }
 
-    public static final class RequestValues implements UseCase.RequestValues {
+    public static final class RequestValues extends UseCaseRx.RequestValues {
 
         private final Task mTask;
 
         public RequestValues(@NonNull Task task) {
-            mTask = checkNotNull(task, "task cannot be null!");
-        }
-
-        public Task getTask() {
-            return mTask;
-        }
-    }
-
-    public static final class ResponseValue implements UseCase.ResponseValue {
-
-        private final Task mTask;
-
-        public ResponseValue(@NonNull Task task) {
             mTask = checkNotNull(task, "task cannot be null!");
         }
 

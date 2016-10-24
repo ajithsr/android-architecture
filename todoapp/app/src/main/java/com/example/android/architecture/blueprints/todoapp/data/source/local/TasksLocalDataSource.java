@@ -148,19 +148,25 @@ public class TasksLocalDataSource implements TasksDataSource {
 
 
    @Override
-   public void saveTask(@NonNull Task task) {
+   public Completable saveTask(@NonNull final Task task) {
       checkNotNull(task);
-      SQLiteDatabase db = mDbHelper.getWritableDatabase();
+      return Completable.create(new Completable.OnSubscribe() {
+         @Override
+         public void call(CompletableSubscriber completableSubscriber) {
+            SQLiteDatabase db = mDbHelper.getWritableDatabase();
 
-      ContentValues values = new ContentValues();
-      values.put(TaskEntry.COLUMN_NAME_ENTRY_ID, task.getId());
-      values.put(TaskEntry.COLUMN_NAME_TITLE, task.getTitle());
-      values.put(TaskEntry.COLUMN_NAME_DESCRIPTION, task.getDescription());
-      values.put(TaskEntry.COLUMN_NAME_COMPLETED, task.isCompleted());
+            ContentValues values = new ContentValues();
+            values.put(TaskEntry.COLUMN_NAME_ENTRY_ID, task.getId());
+            values.put(TaskEntry.COLUMN_NAME_TITLE, task.getTitle());
+            values.put(TaskEntry.COLUMN_NAME_DESCRIPTION, task.getDescription());
+            values.put(TaskEntry.COLUMN_NAME_COMPLETED, task.isCompleted());
 
-      db.insert(TaskEntry.TABLE_NAME, null, values);
+            db.insert(TaskEntry.TABLE_NAME, null, values);
 
-      db.close();
+            db.close();
+            completableSubscriber.onCompleted();
+         }
+      });
    }
 
    @Override

@@ -18,7 +18,6 @@ package com.example.android.architecture.blueprints.todoapp.addedittask.domain.u
 
 import android.support.annotation.NonNull;
 
-import com.example.android.architecture.blueprints.todoapp.UseCase;
 import com.example.android.architecture.blueprints.todoapp.UseCaseRx;
 import com.example.android.architecture.blueprints.todoapp.tasks.domain.model.Task;
 import com.example.android.architecture.blueprints.todoapp.data.source.TasksRepository;
@@ -56,6 +55,4 @@ public class DeleteTask extends UseCaseRx<DeleteTask.RequestValues> {
             return mTaskId;
         }
     }
-
-    public static final class ResponseValue implements UseCase.ResponseValue { }
 }

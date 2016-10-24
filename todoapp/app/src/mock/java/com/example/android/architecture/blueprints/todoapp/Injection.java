@@ -70,10 +70,6 @@ public class Injection {
             TasksFilterType.ALL_TASKS);
    }
 
-   public static UseCaseHandler provideUseCaseHandler() {
-      return UseCaseHandler.getInstance();
-   }
-
    public static GetTask provideGetTask(@NonNull Context context) {
       return new GetTask(
             Injection.provideThreadExecutor(),
@@ -82,7 +78,7 @@ public class Injection {
    }
 
    public static SaveTask provideSaveTask(@NonNull Context context) {
-      return new SaveTask(Injection.provideTasksRepository(context));
+      return new SaveTask(provideThreadExecutor(),providePostExecutionThread(),Injection.provideTasksRepository(context));
    }
 
    public static CompleteTask provideCompleteTasks(@NonNull Context context) {

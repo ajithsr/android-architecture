@@ -81,8 +81,14 @@ public class TasksRemoteDataSource implements TasksDataSource {
     }
 
     @Override
-    public void saveTask(@NonNull Task task) {
-        TASKS_SERVICE_DATA.put(task.getId(), task);
+    public Completable saveTask(@NonNull final Task task) {
+        return Completable.create(new Completable.OnSubscribe() {
+            @Override
+            public void call(CompletableSubscriber completableSubscriber) {
+                TASKS_SERVICE_DATA.put(task.getId(), task);
+                completableSubscriber.onCompleted();
+            }
+        });
     }
 
     @Override
