@@ -16,69 +16,35 @@
 
 package com.example.android.architecture.blueprints.todoapp.addedittask.domain.usecase;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
 import android.support.annotation.NonNull;
 
-import com.example.android.architecture.blueprints.todoapp.UseCase;
-import com.example.android.architecture.blueprints.todoapp.tasks.domain.model.Task;
-import com.example.android.architecture.blueprints.todoapp.data.source.TasksDataSource;
+import com.example.android.architecture.blueprints.todoapp.UseCaseRx;
 import com.example.android.architecture.blueprints.todoapp.data.source.TasksRepository;
+import com.example.android.architecture.blueprints.todoapp.tasks.domain.model.Task;
+
+import rx.Observable;
+import rx.Scheduler;
+
+import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * Retrieves a {@link Task} from the {@link TasksRepository}.
  */
-public class GetTask extends UseCase<GetTask.RequestValues, GetTask.ResponseValue> {
+public class GetTask extends UseCaseRx {
 
-    private final TasksRepository mTasksRepository;
+    private final TasksRepository tasksRepository;
+    private String taskId;
 
-    public GetTask(@NonNull TasksRepository tasksRepository) {
-        mTasksRepository = checkNotNull(tasksRepository, "tasksRepository cannot be null!");
+
+    public GetTask(Scheduler threadExecutor, Scheduler postExecutionThread, @NonNull TasksRepository tasksRepository, String taskId) {
+        super(threadExecutor, postExecutionThread);
+        this.tasksRepository=checkNotNull(tasksRepository, "tasksRepository cannot be null!");
+        this.taskId = taskId;
     }
 
     @Override
-    protected void executeUseCase(final RequestValues values) {
-        mTasksRepository.getTask(values.getTaskId(), new TasksDataSource.GetTaskCallback() {
-            @Override
-            public void onTaskLoaded(Task task) {
-                if (task != null) {
-                    ResponseValue responseValue = new ResponseValue(task);
-                    getUseCaseCallback().onSuccess(responseValue);
-                } else {
-                    getUseCaseCallback().onError();
-                }
-            }
-
-            @Override
-            public void onDataNotAvailable() {
-                getUseCaseCallback().onError();
-            }
-        });
+    protected Observable<Task> buildUseCaseObservable() {
+        return tasksRepository.getTask(taskId);
     }
 
-    public static final class RequestValues implements UseCase.RequestValues {
-
-        private final String mTaskId;
-
-        public RequestValues(@NonNull String taskId) {
-            mTaskId = checkNotNull(taskId, "taskId cannot be null!");
-        }
-
-        public String getTaskId() {
-            return mTaskId;
-        }
-    }
-
-    public static final class ResponseValue implements UseCase.ResponseValue {
-
-        private Task mTask;
-
-        public ResponseValue(@NonNull Task task) {
-            mTask = checkNotNull(task, "task cannot be null!");
-        }
-
-        public Task getTask() {
-            return mTask;
-        }
-    }
 }

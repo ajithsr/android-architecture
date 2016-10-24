@@ -119,6 +119,7 @@ public class TasksRepository implements TasksDataSource {
       }
    }
 
+
    @Override
    public void saveTask(@NonNull Task task) {
       checkNotNull(task);
@@ -192,49 +193,64 @@ public class TasksRepository implements TasksDataSource {
       }
    }
 
+//
+//   @Override
+//   public void getTask(@NonNull final String taskId, @NonNull final GetTaskCallback callback) {
+//      checkNotNull(taskId);
+//      checkNotNull(callback);
+//
+//      Task cachedTask = getTaskWithId(taskId);
+//
+//      // Respond immediately with cache if available
+//      if (cachedTask != null) {
+//         callback.onTaskLoaded(cachedTask);
+//         return;
+//      }
+//
+//      // Load from server/persisted if needed.
+//
+//      // Is the task in the local data source? If not, query the network.
+//      mTasksLocalDataSource.getTask(taskId, new GetTaskCallback() {
+//         @Override
+//         public void onTaskLoaded(Task task) {
+//            callback.onTaskLoaded(task);
+//         }
+//
+//         @Override
+//         public void onDataNotAvailable() {
+//            mTasksRemoteDataSource.getTask(taskId, new GetTaskCallback() {
+//               @Override
+//               public void onTaskLoaded(Task task) {
+//                  callback.onTaskLoaded(task);
+//               }
+//
+//               @Override
+//               public void onDataNotAvailable() {
+//                  callback.onDataNotAvailable();
+//               }
+//            });
+//         }
+//      });
+//   }
+
+
    /**
     * Gets tasks from local data source (sqlite) unless the table is new or empty. In that case it
     * uses the network data source. This is done to simplify the sample.
     * <p>
     */
    @Override
-   public void getTask(@NonNull final String taskId, @NonNull final GetTaskCallback callback) {
+   public Observable<Task> getTask(@NonNull String taskId) {
       checkNotNull(taskId);
-      checkNotNull(callback);
 
       Task cachedTask = getTaskWithId(taskId);
-
       // Respond immediately with cache if available
       if (cachedTask != null) {
-         callback.onTaskLoaded(cachedTask);
-         return;
+         return Observable.just(cachedTask);
       }
-
-      // Load from server/persisted if needed.
-
-      // Is the task in the local data source? If not, query the network.
-      mTasksLocalDataSource.getTask(taskId, new GetTaskCallback() {
-         @Override
-         public void onTaskLoaded(Task task) {
-            callback.onTaskLoaded(task);
-         }
-
-         @Override
-         public void onDataNotAvailable() {
-            mTasksRemoteDataSource.getTask(taskId, new GetTaskCallback() {
-               @Override
-               public void onTaskLoaded(Task task) {
-                  callback.onTaskLoaded(task);
-               }
-
-               @Override
-               public void onDataNotAvailable() {
-                  callback.onDataNotAvailable();
-               }
-            });
-         }
-      });
+      return mTasksLocalDataSource.getTask(taskId);
    }
+
 
    @Override
    public void refreshTasks() {

@@ -73,7 +73,7 @@ public class AddEditTaskActivity extends AppCompatActivity {
         new AddEditTaskPresenter(Injection.provideUseCaseHandler(),
                 taskId,
                 addEditTaskFragment,
-                Injection.provideGetTask(getApplicationContext()),
+                Injection.provideGetTask(getApplicationContext(),taskId),
                 Injection.provideSaveTask(getApplicationContext())
         );
     }

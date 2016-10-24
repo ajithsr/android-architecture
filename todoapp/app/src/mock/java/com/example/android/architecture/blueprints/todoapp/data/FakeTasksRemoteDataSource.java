@@ -55,9 +55,8 @@ public class FakeTasksRemoteDataSource implements TasksDataSource {
     }
 
     @Override
-    public void getTask(@NonNull String taskId, @NonNull GetTaskCallback callback) {
-        Task task = TASKS_SERVICE_DATA.get(taskId);
-        callback.onTaskLoaded(task);
+    public Observable<Task> getTask(@NonNull String taskId) {
+        return Observable.just(TASKS_SERVICE_DATA.get(taskId));
     }
 
     @Override

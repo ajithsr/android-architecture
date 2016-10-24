@@ -44,8 +44,8 @@ public class GetTasks extends UseCaseRx {
     private boolean mForceUpdate;
     private TasksFilterType currentFiltering;
 
-    public GetTasks(@NonNull TasksRepository tasksRepository, @NonNull FilterFactory filterFactory, Scheduler threadExecutor,
-                    Scheduler postExecutionThread, boolean mForceUpdate, TasksFilterType currentFiltering) {
+    public GetTasks( Scheduler threadExecutor,
+                    Scheduler postExecutionThread,@NonNull TasksRepository tasksRepository, @NonNull FilterFactory filterFactory, boolean mForceUpdate, TasksFilterType currentFiltering) {
         super(threadExecutor,postExecutionThread);
         mTasksRepository = checkNotNull(tasksRepository, "tasksRepository cannot be null!");
         mFilterFactory = checkNotNull(filterFactory, "filterFactory cannot be null!");

@@ -25,6 +25,8 @@ import com.example.android.architecture.blueprints.todoapp.addedittask.domain.us
 import com.example.android.architecture.blueprints.todoapp.addedittask.domain.usecase.SaveTask;
 import com.example.android.architecture.blueprints.todoapp.tasks.domain.model.Task;
 
+import rx.Subscriber;
+
 import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
@@ -89,19 +91,24 @@ public class AddEditTaskPresenter implements AddEditTaskContract.Presenter {
         if (mTaskId == null) {
             throw new RuntimeException("populateTask() was called but task is new.");
         }
+       mGetTask.execute(new Subscriber<Task>() {
+          @Override
+          public void onCompleted() {
 
-        mUseCaseHandler.execute(mGetTask, new GetTask.RequestValues(mTaskId),
-                new UseCase.UseCaseCallback<GetTask.ResponseValue>() {
-                    @Override
-                    public void onSuccess(GetTask.ResponseValue response) {
-                        showTask(response.getTask());
-                    }
+          }
 
-                    @Override
-                    public void onError() {
-                        showEmptyTaskError();
-                    }
-                });
+          @Override
+          public void onError(Throwable e) {
+
+          }
+
+          @Override
+          public void onNext(Task task) {
+             showTask(task);
+          }
+
+       });
+
     }
 
     private void showTask(Task task) {

@@ -16,7 +16,6 @@
 
 package com.example.android.architecture.blueprints.todoapp.data.source.remote;
 
-import android.os.Handler;
 import android.support.annotation.NonNull;
 
 import com.example.android.architecture.blueprints.todoapp.data.source.TasksDataSource;
@@ -64,20 +63,12 @@ public class TasksRemoteDataSource implements TasksDataSource {
     }
 
     /**
-     * Note: {@link LoadTasksCallback#onDataNotAvailable()} is never fired. In a real remote data
+     * In a real remote data
      * source implementation, this would be fired if the server can't be contacted or the server
      * returns an error.
      */
     @Override
     public Observable<ArrayList<Task>> getTasks() {
-//        // Simulate network by delaying the execution.
-//        Handler handler = new Handler(Looper.getMainLooper());
-//        handler.postDelayed(new Runnable() {
-//            @Override
-//            public void run() {
-//                callback.onTasksLoaded();
-//            }
-//        }, SERVICE_LATENCY_IN_MILLIS);
         return Observable.just(Lists.newArrayList(TASKS_SERVICE_DATA.values())).delay(SERVICE_LATENCY_IN_MILLIS, TimeUnit.MICROSECONDS);
     }
 
@@ -87,17 +78,8 @@ public class TasksRemoteDataSource implements TasksDataSource {
      * returns an error.
      */
     @Override
-    public void getTask(@NonNull String taskId, final @NonNull GetTaskCallback callback) {
-        final Task task = TASKS_SERVICE_DATA.get(taskId);
-
-        // Simulate network by delaying the execution.
-        Handler handler = new Handler();
-        handler.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                callback.onTaskLoaded(task);
-            }
-        }, SERVICE_LATENCY_IN_MILLIS);
+    public Observable<Task> getTask(@NonNull String taskId) {
+        return Observable.just(TASKS_SERVICE_DATA.get(taskId)).delay(SERVICE_LATENCY_IN_MILLIS, TimeUnit.MICROSECONDS);
     }
 
     @Override

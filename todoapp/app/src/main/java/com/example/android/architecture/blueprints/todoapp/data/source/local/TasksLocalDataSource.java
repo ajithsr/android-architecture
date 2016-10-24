@@ -103,46 +103,50 @@ public class TasksLocalDataSource implements TasksDataSource {
     * found.
     */
    @Override
-   public void getTask(@NonNull String taskId, @NonNull GetTaskCallback callback) {
-      SQLiteDatabase db = mDbHelper.getReadableDatabase();
+   public Observable<Task> getTask(@NonNull final String taskId) {
 
-      String[] projection = {
-            TaskEntry.COLUMN_NAME_ENTRY_ID,
-            TaskEntry.COLUMN_NAME_TITLE,
-            TaskEntry.COLUMN_NAME_DESCRIPTION,
-            TaskEntry.COLUMN_NAME_COMPLETED
-      };
+      return Observable.create(new Observable.OnSubscribe<Task>() {
+         @Override
+         public void call(Subscriber<? super Task> subscriber) {
 
-      String selection = TaskEntry.COLUMN_NAME_ENTRY_ID + " LIKE ?";
-      String[] selectionArgs = {taskId};
+            SQLiteDatabase db = mDbHelper.getReadableDatabase();
 
-      Cursor c = db.query(
-            TaskEntry.TABLE_NAME, projection, selection, selectionArgs, null, null, null);
+            String[] projection = {
+                  TaskEntry.COLUMN_NAME_ENTRY_ID,
+                  TaskEntry.COLUMN_NAME_TITLE,
+                  TaskEntry.COLUMN_NAME_DESCRIPTION,
+                  TaskEntry.COLUMN_NAME_COMPLETED
+            };
 
-      Task task = null;
+            String selection = TaskEntry.COLUMN_NAME_ENTRY_ID + " LIKE ?";
+            String[] selectionArgs = {taskId};
 
-      if (c != null && c.getCount() > 0) {
-         c.moveToFirst();
-         String itemId = c.getString(c.getColumnIndexOrThrow(TaskEntry.COLUMN_NAME_ENTRY_ID));
-         String title = c.getString(c.getColumnIndexOrThrow(TaskEntry.COLUMN_NAME_TITLE));
-         String description =
-               c.getString(c.getColumnIndexOrThrow(TaskEntry.COLUMN_NAME_DESCRIPTION));
-         boolean completed =
-               c.getInt(c.getColumnIndexOrThrow(TaskEntry.COLUMN_NAME_COMPLETED)) == 1;
-         task = new Task(title, description, itemId, completed);
-      }
-      if (c != null) {
-         c.close();
-      }
+            Cursor c = db.query(
+                  TaskEntry.TABLE_NAME, projection, selection, selectionArgs, null, null, null);
 
-      db.close();
+            Task task = null;
 
-      if (task != null) {
-         callback.onTaskLoaded(task);
-      } else {
-         callback.onDataNotAvailable();
-      }
+            if (c != null && c.getCount() > 0) {
+               c.moveToFirst();
+               String itemId = c.getString(c.getColumnIndexOrThrow(TaskEntry.COLUMN_NAME_ENTRY_ID));
+               String title = c.getString(c.getColumnIndexOrThrow(TaskEntry.COLUMN_NAME_TITLE));
+               String description =
+                     c.getString(c.getColumnIndexOrThrow(TaskEntry.COLUMN_NAME_DESCRIPTION));
+               boolean completed =
+                     c.getInt(c.getColumnIndexOrThrow(TaskEntry.COLUMN_NAME_COMPLETED)) == 1;
+               task = new Task(title, description, itemId, completed);
+            }
+            if (c != null) {
+               c.close();
+            }
+
+            db.close();
+            subscriber.onNext(task);
+            subscriber.onCompleted();
+         }
+      });
    }
+
 
    @Override
    public void saveTask(@NonNull Task task) {

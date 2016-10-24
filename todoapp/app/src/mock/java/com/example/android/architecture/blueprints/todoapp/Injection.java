@@ -62,19 +62,24 @@ public class Injection {
    }
 
    public static GetTasks provideGetTasks(@NonNull Context context) {
-      return new GetTasks(provideTasksRepository(context), new FilterFactory(),
+      return new GetTasks(
             Injection.provideThreadExecutor(),
             Injection.providePostExecutionThread(),
+            provideTasksRepository(context), new FilterFactory(),
             false,
-            TasksFilterType.ACTIVE_TASKS);
+            TasksFilterType.ALL_TASKS);
    }
 
    public static UseCaseHandler provideUseCaseHandler() {
       return UseCaseHandler.getInstance();
    }
 
-   public static GetTask provideGetTask(@NonNull Context context) {
-      return new GetTask(Injection.provideTasksRepository(context));
+   public static GetTask provideGetTask(@NonNull Context context,String taskId) {
+      return new GetTask(
+            Injection.provideThreadExecutor(),
+            Injection.providePostExecutionThread(),
+            Injection.provideTasksRepository(context),
+            taskId);
    }
 
    public static SaveTask provideSaveTask(@NonNull Context context) {
