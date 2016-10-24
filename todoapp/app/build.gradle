@@ -70,6 +70,8 @@ dependencies {
     compile "com.android.support:support-v4:$rootProject.supportLibraryVersion"
     compile "com.android.support.test.espresso:espresso-idling-resource:$rootProject.espressoVersion"
     compile "com.google.guava:guava:$rootProject.guavaVersion"
+    compile "io.reactivex:rxjava:$rootProject.rxjavaVersion"
+
 
     // Dependencies for local unit tests
     testCompile "junit:junit:$rootProject.ext.junitVersion"
