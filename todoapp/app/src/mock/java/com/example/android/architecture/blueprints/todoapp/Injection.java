@@ -47,53 +47,57 @@ import static com.google.common.base.Preconditions.checkNotNull;
  */
 public class Injection {
 
-    public static TasksRepository provideTasksRepository(@NonNull Context context) {
-        checkNotNull(context);
-        return TasksRepository.getInstance(TasksRemoteDataSource.getInstance(),
-                TasksLocalDataSource.getInstance(context));
-    }
+   public static TasksRepository provideTasksRepository(@NonNull Context context) {
+      checkNotNull(context);
+      return TasksRepository.getInstance(TasksRemoteDataSource.getInstance(),
+            TasksLocalDataSource.getInstance(context));
+   }
 
-    public static Scheduler providePostExecutionThread(){
-        return AndroidSchedulers.mainThread();
-    }
+   public static Scheduler providePostExecutionThread() {
+      return AndroidSchedulers.mainThread();
+   }
 
-    public static Scheduler provideThreadExecutor(){
-        return Schedulers.io();
-    }
+   public static Scheduler provideThreadExecutor() {
+      return Schedulers.io();
+   }
 
-    public static GetTasks provideGetTasks(@NonNull Context context) {
-        return new GetTasks(provideTasksRepository(context), new FilterFactory(),Injection.provideThreadExecutor(),Injection.providePostExecutionThread(),false, TasksFilterType.ACTIVE_TASKS);
-    }
+   public static GetTasks provideGetTasks(@NonNull Context context) {
+      return new GetTasks(provideTasksRepository(context), new FilterFactory(),
+            Injection.provideThreadExecutor(),
+            Injection.providePostExecutionThread(),
+            false,
+            TasksFilterType.ACTIVE_TASKS);
+   }
 
-    public static UseCaseHandler provideUseCaseHandler() {
-        return UseCaseHandler.getInstance();
-    }
+   public static UseCaseHandler provideUseCaseHandler() {
+      return UseCaseHandler.getInstance();
+   }
 
-    public static GetTask provideGetTask(@NonNull Context context) {
-        return new GetTask(Injection.provideTasksRepository(context));
-    }
+   public static GetTask provideGetTask(@NonNull Context context) {
+      return new GetTask(Injection.provideTasksRepository(context));
+   }
 
-    public static SaveTask provideSaveTask(@NonNull Context context) {
-        return new SaveTask(Injection.provideTasksRepository(context));
-    }
+   public static SaveTask provideSaveTask(@NonNull Context context) {
+      return new SaveTask(Injection.provideTasksRepository(context));
+   }
 
-    public static CompleteTask provideCompleteTasks(@NonNull Context context) {
-        return new CompleteTask(Injection.provideTasksRepository(context));
-    }
+   public static CompleteTask provideCompleteTasks(@NonNull Context context) {
+      return new CompleteTask(Injection.provideTasksRepository(context));
+   }
 
-    public static ActivateTask provideActivateTask(@NonNull Context context) {
-        return new ActivateTask(Injection.provideTasksRepository(context));
-    }
+   public static ActivateTask provideActivateTask(@NonNull Context context) {
+      return new ActivateTask(Injection.provideTasksRepository(context));
+   }
 
-    public static ClearCompleteTasks provideClearCompleteTasks(@NonNull Context context) {
-        return new ClearCompleteTasks(Injection.provideTasksRepository(context));
-    }
+   public static ClearCompleteTasks provideClearCompleteTasks(@NonNull Context context) {
+      return new ClearCompleteTasks(Injection.provideTasksRepository(context));
+   }
 
-    public static DeleteTask provideDeleteTask(@NonNull Context context) {
-        return new DeleteTask(Injection.provideTasksRepository(context));
-    }
+   public static DeleteTask provideDeleteTask(@NonNull Context context) {
+      return new DeleteTask(Injection.provideTasksRepository(context));
+   }
 
-    public static GetStatistics provideGetStatistics(@NonNull Context context) {
-        return new GetStatistics(Injection.provideTasksRepository(context));
-    }
+   public static GetStatistics provideGetStatistics(@NonNull Context context) {
+      return new GetStatistics(Injection.provideTasksRepository(context));
+   }
 }

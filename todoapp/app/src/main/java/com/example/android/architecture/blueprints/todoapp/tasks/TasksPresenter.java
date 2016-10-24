@@ -105,9 +105,6 @@ public class TasksPresenter implements TasksContract.Presenter {
         if (showLoadingUI) {
             mTasksView.setLoadingIndicator(true);
         }
-//
-//        GetTasks.RequestValues requestValue = new GetTasks.RequestValues(forceUpdate,
-//                mCurrentFiltering);
 
         mGetTasks.execute(new Subscriber<ArrayList<Task>>() {
             @Override
@@ -135,31 +132,6 @@ public class TasksPresenter implements TasksContract.Presenter {
                 processTasks(tasks);
             }
         });
-//        mUseCaseHandler.execute(mGetTasks, requestValue,
-//                new UseCase.UseCaseCallback<GetTasks.ResponseValue>() {
-//                    @Override
-//                    public void onSuccess(GetTasks.ResponseValue response) {
-//                        List<Task> tasks = response.getTasks();
-//                        // The view may not be able to handle UI updates anymore
-//                        if (!mTasksView.isActive()) {
-//                            return;
-//                        }
-//                        if (showLoadingUI) {
-//                            mTasksView.setLoadingIndicator(false);
-//                        }
-//
-//                        processTasks(tasks);
-//                    }
-//
-//                    @Override
-//                    public void onError() {
-//                        // The view may not be able to handle UI updates anymore
-//                        if (!mTasksView.isActive()) {
-//                            return;
-//                        }
-//                        mTasksView.showLoadingTasksError();
-//                    }
-//                });
     }
 
     private void processTasks(List<Task> tasks) {

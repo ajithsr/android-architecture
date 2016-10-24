@@ -21,7 +21,6 @@ import android.support.annotation.NonNull;
 import com.example.android.architecture.blueprints.todoapp.tasks.domain.model.Task;
 
 import java.util.ArrayList;
-import java.util.List;
 
 import rx.Observable;
 
@@ -34,13 +33,6 @@ import rx.Observable;
  * operation on database or network should be executed in a different thread.
  */
 public interface TasksDataSource {
-
-    interface LoadTasksCallback {
-
-        void onTasksLoaded(List<Task> tasks);
-
-        void onDataNotAvailable();
-    }
 
     interface GetTaskCallback {
 

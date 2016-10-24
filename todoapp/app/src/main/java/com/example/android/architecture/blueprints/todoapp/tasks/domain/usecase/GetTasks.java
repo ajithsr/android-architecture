@@ -53,7 +53,8 @@ public class GetTasks extends UseCaseRx {
         this.currentFiltering = currentFiltering;
     }
 
-    protected Observable<List<Task>> executeUseCase() {
+    @Override
+    protected Observable<List<Task>> buildUseCaseObservable() {
         if (mForceUpdate) {
             mTasksRepository.refreshTasks();
         }
@@ -65,66 +66,5 @@ public class GetTasks extends UseCaseRx {
                 return tasksFiltered;
             }
         });
-
-
-
-//        ResponseValue responseValue = new ResponseValue(tasksFiltered);
-//
-//        return mTasksRepository.getTasks();
-//        mTasksRepository.getTasks(new TasksDataSource.LoadTasksCallback() {
-//            @Override
-//            public void onTasksLoaded(List<Task> tasks) {
-//                TasksFilterType currentFiltering = values.getCurrentFiltering();
-//                TaskFilter taskFilter = mFilterFactory.create(currentFiltering);
-//
-//                List<Task> tasksFiltered = taskFilter.filter(tasks);
-//
-//                ResponseValue responseValue = new ResponseValue(tasksFiltered);
-//                getUseCaseCallback().onSuccess(responseValue);
-//            }
-//
-//            @Override
-//            public void onDataNotAvailable() {
-//                getUseCaseCallback().onError();
-//            }
-//        });
-
     }
-
-    @Override
-    protected Observable<List<Task>> buildUseCaseObservable() {
-        return executeUseCase();
-    }
-//
-//    public static final class RequestValues implements UseCase.RequestValues {
-//
-//        private final TasksFilterType mCurrentFiltering;
-//        private final boolean mForceUpdate;
-//
-//        public RequestValues(boolean forceUpdate, @NonNull TasksFilterType currentFiltering) {
-//            mForceUpdate = forceUpdate;
-//            mCurrentFiltering = checkNotNull(currentFiltering, "currentFiltering cannot be null!");
-//        }
-//
-//        public boolean isForceUpdate() {
-//            return mForceUpdate;
-//        }
-//
-//        public TasksFilterType getCurrentFiltering() {
-//            return mCurrentFiltering;
-//        }
-//    }
-//
-//    public static final class ResponseValue implements UseCase.ResponseValue {
-//
-//        private final List<Task> mTasks;
-//
-//        public ResponseValue(@NonNull List<Task> tasks) {
-//            mTasks = checkNotNull(tasks, "tasks cannot be null!");
-//        }
-//
-//        public List<Task> getTasks() {
-//            return mTasks;
-//        }
-//    }
 }
