@@ -172,8 +172,7 @@ public class TasksLocalDataSourceTest {
       // Then the retrieved tasks is an empty list
       TestSubscriber<ArrayList<Task>> testSubscriber = new TestSubscriber<>();
       mLocalDataSource.getTasks().subscribe(testSubscriber);
-      List<ArrayList<Task>> onNextEvents = testSubscriber.getOnNextEvents();
-      assertThat(onNextEvents.get(0).size(), is(0));
+      testSubscriber.assertNoValues();
    }
 
     @Test

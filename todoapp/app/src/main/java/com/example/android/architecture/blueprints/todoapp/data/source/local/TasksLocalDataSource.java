@@ -93,8 +93,8 @@ public class TasksLocalDataSource implements TasksDataSource {
             }
 
             db.close();
-
-            subscriber.onNext(tasks);
+            if(!tasks.isEmpty()){
+               subscriber.onNext(tasks);}
             subscriber.onCompleted();
          }
       });
@@ -140,9 +140,8 @@ public class TasksLocalDataSource implements TasksDataSource {
             }
 
             db.close();
-            if(task!=null) {
-               subscriber.onNext(task);
-            }
+            if(task!=null){
+               subscriber.onNext(task);}
             subscriber.onCompleted();
          }
       });

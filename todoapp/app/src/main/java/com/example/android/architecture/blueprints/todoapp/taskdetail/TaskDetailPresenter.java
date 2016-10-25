@@ -18,6 +18,7 @@ package com.example.android.architecture.blueprints.todoapp.taskdetail;
 
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.util.Log;
 
 import com.example.android.architecture.blueprints.todoapp.addedittask.domain.usecase.DeleteTask;
 import com.example.android.architecture.blueprints.todoapp.addedittask.domain.usecase.GetTask;
@@ -95,6 +96,7 @@ public class TaskDetailPresenter implements TaskDetailContract.Presenter {
                return;
             }
             mTaskDetailView.showMissingTask();
+            Log.e("TEST ERROR",e.getMessage());
          }
 
          @Override

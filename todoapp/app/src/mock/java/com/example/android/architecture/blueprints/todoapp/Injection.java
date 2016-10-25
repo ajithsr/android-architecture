@@ -26,7 +26,6 @@ import com.example.android.architecture.blueprints.todoapp.data.FakeTasksRemoteD
 import com.example.android.architecture.blueprints.todoapp.data.source.TasksDataSource;
 import com.example.android.architecture.blueprints.todoapp.data.source.TasksRepository;
 import com.example.android.architecture.blueprints.todoapp.data.source.local.TasksLocalDataSource;
-import com.example.android.architecture.blueprints.todoapp.data.source.remote.TasksRemoteDataSource;
 import com.example.android.architecture.blueprints.todoapp.statistics.domain.usecase.GetStatistics;
 import com.example.android.architecture.blueprints.todoapp.tasks.TasksFilterType;
 import com.example.android.architecture.blueprints.todoapp.tasks.domain.filter.FilterFactory;
@@ -50,7 +49,7 @@ public class Injection {
 
    public static TasksRepository provideTasksRepository(@NonNull Context context) {
       checkNotNull(context);
-      return TasksRepository.getInstance(TasksRemoteDataSource.getInstance(),
+      return TasksRepository.getInstance(FakeTasksRemoteDataSource.getInstance(),
             TasksLocalDataSource.getInstance(context));
    }
 

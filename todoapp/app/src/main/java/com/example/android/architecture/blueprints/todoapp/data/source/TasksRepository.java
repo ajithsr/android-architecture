@@ -109,17 +109,20 @@ public class TasksRepository implements TasksDataSource {
          // If the cache is dirty we need to fetch new data from the network.
          return getTasksFromRemoteDataSource();
       } else {
-         return mTasksLocalDataSource.getTasks().flatMap(new Func1<ArrayList<Task>, Observable<ArrayList<Task>>>() {
-            @Override
-            public Observable<ArrayList<Task>> call(ArrayList<Task> tasks) {
-               if (tasks.size() == 0) {
-                  return getTasksFromRemoteDataSource();
-               } else {
-                  refreshCache(tasks);
-                  return Observable.just(tasks);
-               }
-            }
-         });
+         return mTasksLocalDataSource.getTasks()
+               .switchIfEmpty(getTasksFromRemoteDataSource());
+//
+//         return mTasksLocalDataSource.getTasks().flatMap(new Func1<ArrayList<Task>, Observable<ArrayList<Task>>>() {
+//            @Override
+//            public Observable<ArrayList<Task>> call(ArrayList<Task> tasks) {
+//               if (tasks.size() == 0) {
+//                  return getTasksFromRemoteDataSource();
+//               } else {
+//                  refreshCache(tasks);
+//                  return Observable.just(tasks);
+//               }
+//            }
+//         });
       }
    }
 
@@ -224,7 +227,7 @@ public class TasksRepository implements TasksDataSource {
     * <p>
     */
    @Override
-   public Observable<Task> getTask(@NonNull String taskId) {
+   public Observable<Task> getTask(@NonNull final String taskId) {
       checkNotNull(taskId);
 
       Task cachedTask = getTaskWithId(taskId);
@@ -232,7 +235,19 @@ public class TasksRepository implements TasksDataSource {
       if (cachedTask != null) {
          return Observable.just(cachedTask);
       }
-      return mTasksLocalDataSource.getTask(taskId);
+      return mTasksLocalDataSource.getTask(taskId)
+            .switchIfEmpty(mTasksRemoteDataSource.getTask(taskId));
+//
+//      return mTasksLocalDataSource.getTask(taskId).flatMap(new Func1<Task, Observable<Task>>() {
+//         @Override
+//         public Observable<Task> call(Task task) {
+//            if(task==null){
+//               return mTasksRemoteDataSource.getTask(taskId);
+//            }else{
+//               return Observable.just(task);
+//            }
+//         }
+//      });
    }
 
 
@@ -279,6 +294,7 @@ public class TasksRepository implements TasksDataSource {
       });
 
    }
+
    @VisibleForTesting
    private void refreshCache(List<Task> tasks) {
       if (mCachedTasks == null) {
