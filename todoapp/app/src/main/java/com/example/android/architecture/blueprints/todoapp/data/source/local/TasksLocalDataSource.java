@@ -140,7 +140,9 @@ public class TasksLocalDataSource implements TasksDataSource {
             }
 
             db.close();
-            subscriber.onNext(task);
+            if(task!=null) {
+               subscriber.onNext(task);
+            }
             subscriber.onCompleted();
          }
       });
@@ -213,6 +215,7 @@ public class TasksLocalDataSource implements TasksDataSource {
             db.update(TaskEntry.TABLE_NAME, values, selection, selectionArgs);
 
             db.close();
+            completableSubscriber.onCompleted();
          }
       });
 

@@ -18,6 +18,7 @@ package com.example.android.architecture.blueprints.todoapp.data.source;
 
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.annotation.VisibleForTesting;
 
 import com.example.android.architecture.blueprints.todoapp.tasks.domain.model.Task;
 
@@ -131,9 +132,6 @@ public class TasksRepository implements TasksDataSource {
             .doOnCompleted(new Action0() {
                @Override
                public void call() {
-                  mTasksRemoteDataSource.saveTask(task);
-                  mTasksLocalDataSource.saveTask(task);
-
                   // Do in memory cache update to keep the app UI up to date
                   if (mCachedTasks == null) {
                      mCachedTasks = new LinkedHashMap<>();
@@ -149,7 +147,7 @@ public class TasksRepository implements TasksDataSource {
       checkNotNull(task);
 
       return mTasksRemoteDataSource.completeTask(task)
-            .merge(mTasksLocalDataSource.completeTask(task))
+            .mergeWith(mTasksLocalDataSource.completeTask(task))
             .doOnCompleted(new Action0() {
                @Override
                public void call() {
@@ -281,7 +279,7 @@ public class TasksRepository implements TasksDataSource {
       });
 
    }
-
+   @VisibleForTesting
    private void refreshCache(List<Task> tasks) {
       if (mCachedTasks == null) {
          mCachedTasks = new LinkedHashMap<>();

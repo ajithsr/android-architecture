@@ -13,3 +13,7 @@
 -dontwarn com.squareup.javawriter.JavaWriter
 # Uncomment this if you use Mockito
 -dontwarn org.mockito.**
+
+
+-keep class rx.** { *; }
+-dontwarn rx.**

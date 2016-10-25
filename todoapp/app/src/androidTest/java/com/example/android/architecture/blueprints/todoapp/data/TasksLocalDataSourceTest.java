@@ -16,13 +16,30 @@
 
 package com.example.android.architecture.blueprints.todoapp.data;
 
+import android.support.test.InstrumentationRegistry;
 import android.support.test.runner.AndroidJUnit4;
 import android.test.suitebuilder.annotation.LargeTest;
 
 import com.example.android.architecture.blueprints.todoapp.data.source.TasksDataSource;
 import com.example.android.architecture.blueprints.todoapp.data.source.local.TasksDbHelper;
+import com.example.android.architecture.blueprints.todoapp.data.source.local.TasksLocalDataSource;
+import com.example.android.architecture.blueprints.todoapp.tasks.domain.model.Task;
 
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 import org.junit.runner.RunWith;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import rx.observers.TestSubscriber;
+
+import static junit.framework.Assert.assertEquals;
+import static junit.framework.Assert.assertTrue;
+import static junit.framework.TestCase.assertNotNull;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.core.Is.is;
 
 /**
  * Integration test for the {@link TasksDataSource}, which uses the {@link TasksDbHelper}.
@@ -30,188 +47,154 @@ import org.junit.runner.RunWith;
 @RunWith(AndroidJUnit4.class)
 @LargeTest
 public class TasksLocalDataSourceTest {
-//
-//    private static final String TITLE = "title";
-//
-//    private static final String TITLE2 = "title2";
-//
-//    private static final String TITLE3 = "title3";
-//
-//    private TasksLocalDataSource mLocalDataSource;
-//
-//    @Before
-//    public void setup() {
-//         mLocalDataSource = TasksLocalDataSource.getInstance(
-//                 InstrumentationRegistry.getTargetContext());
-//    }
-//
-//    @After
-//    public void cleanUp() {
-//        mLocalDataSource.deleteAllTasks();
-//    }
-//
-//    @Test
-//    public void testPreConditions() {
-//        assertNotNull(mLocalDataSource);
-//    }
-//
-//    @Test
-//    public void saveTask_retrievesTask() {
-//        // Given a new task
-//        final Task newTask = new Task(TITLE, "");
-//
-//        // When saved into the persistent repository
-//        mLocalDataSource.saveTask(newTask);
-//
-//        // Then the task can be retrieved from the persistent repository
-//        mLocalDataSource.getTask(newTask.getId(), new TasksDataSource.GetTaskCallback() {
-//            @Override
-//            public void onTaskLoaded(Task task) {
-//                assertThat(task, is(newTask));
-//            }
-//
-//            @Override
-//            public void onDataNotAvailable() {
-//                fail("Callback error");
-//            }
-//        });
-//    }
-//
-//    @Test
-//    public void completeTask_retrievedTaskIsComplete() {
-//        // Initialize mock for the callback.
-//        TasksDataSource.GetTaskCallback callback = mock(TasksDataSource.GetTaskCallback.class);
-//        // Given a new task in the persistent repository
-//        final Task newTask = new Task(TITLE, "");
-//        mLocalDataSource.saveTask(newTask);
-//
-//        // When completed in the persistent repository
-//        mLocalDataSource.completeTask(newTask);
-//
-//        // Then the task can be retrieved from the persistent repository and is complete
-//        mLocalDataSource.getTask(newTask.getId(), new TasksDataSource.GetTaskCallback() {
-//            @Override
-//            public void onTaskLoaded(Task task) {
-//                assertThat(task, is(newTask));
-//                assertThat(task.isCompleted(), is(true));
-//            }
-//
-//            @Override
-//            public void onDataNotAvailable() {
-//                fail("Callback error");
-//            }
-//        });
-//    }
-//
-//    @Test
-//    public void activateTask_retrievedTaskIsActive() {
-//        // Initialize mock for the callback.
-//        TasksDataSource.GetTaskCallback callback = mock(TasksDataSource.GetTaskCallback.class);
-//
-//        // Given a new completed task in the persistent repository
-//        final Task newTask = new Task(TITLE, "");
-//        mLocalDataSource.saveTask(newTask);
-//        mLocalDataSource.completeTask(newTask);
-//
-//        // When activated in the persistent repository
-//        mLocalDataSource.activateTask(newTask);
-//
-//        // Then the task can be retrieved from the persistent repository and is active
-//        mLocalDataSource.getTask(newTask.getId(), callback);
-//
-//        verify(callback, never()).onDataNotAvailable();
-//        verify(callback).onTaskLoaded(newTask);
-//
-//        assertThat(newTask.isCompleted(), is(false));
-//    }
-//
-//    @Test
-//    public void clearCompletedTask_taskNotRetrievable() {
-//        // Initialize mocks for the callbacks.
-//        TasksDataSource.GetTaskCallback callback1 = mock(TasksDataSource.GetTaskCallback.class);
-//        TasksDataSource.GetTaskCallback callback2 = mock(TasksDataSource.GetTaskCallback.class);
-//        TasksDataSource.GetTaskCallback callback3 = mock(TasksDataSource.GetTaskCallback.class);
-//
-//        // Given 2 new completed tasks and 1 active task in the persistent repository
-//        final Task newTask1 = new Task(TITLE, "");
-//        mLocalDataSource.saveTask(newTask1);
-//        mLocalDataSource.completeTask(newTask1);
-//        final Task newTask2 = new Task(TITLE2, "");
-//        mLocalDataSource.saveTask(newTask2);
-//        mLocalDataSource.completeTask(newTask2);
-//        final Task newTask3 = new Task(TITLE3, "");
-//        mLocalDataSource.saveTask(newTask3);
-//
-//        // When completed tasks are cleared in the repository
-//        mLocalDataSource.clearCompletedTasks();
-//
-//        // Then the completed tasks cannot be retrieved and the active one can
-//        mLocalDataSource.getTask(newTask1.getId(), callback1);
-//
-//        verify(callback1).onDataNotAvailable();
-//        verify(callback1, never()).onTaskLoaded(newTask1);
-//
-//        mLocalDataSource.getTask(newTask2.getId(), callback2);
-//
-//        verify(callback2).onDataNotAvailable();
-//        verify(callback2, never()).onTaskLoaded(newTask1);
-//
-//        mLocalDataSource.getTask(newTask3.getId(), callback3);
-//
-//        verify(callback3, never()).onDataNotAvailable();
-//        verify(callback3).onTaskLoaded(newTask3);
-//    }
-//
-//    @Test
-//    public void deleteAllTasks_emptyListOfRetrievedTask() {
-//        // Given a new task in the persistent repository and a mocked callback
-//        Task newTask = new Task(TITLE, "");
-//        mLocalDataSource.saveTask(newTask);
-//        TasksDataSource.LoadTasksCallback callback = mock(TasksDataSource.LoadTasksCallback.class);
-//
-//        // When all tasks are deleted
-//        mLocalDataSource.deleteAllTasks();
-//
-//        // Then the retrieved tasks is an empty list
-//        mLocalDataSource.getTasks(callback);
-//
-//        verify(callback).onDataNotAvailable();
-//        verify(callback, never()).onTasksLoaded(anyList());
-//    }
-//
-//    @Test
-//    public void getTasks_retrieveSavedTasks() {
-//        // Given 2 new tasks in the persistent repository
-//        final Task newTask1 = new Task(TITLE, "");
-//        mLocalDataSource.saveTask(newTask1);
-//        final Task newTask2 = new Task(TITLE, "");
-//        mLocalDataSource.saveTask(newTask2);
-//
-//        // Then the tasks can be retrieved from the persistent repository
-//        mLocalDataSource.getTasks(new TasksDataSource.LoadTasksCallback() {
-//            @Override
-//            public void onTasksLoaded(List<Task> tasks) {
-//                assertNotNull(tasks);
-//                assertTrue(tasks.size() >= 2);
-//
-//                boolean newTask1IdFound = false;
-//                boolean newTask2IdFound = false;
-//                for (Task task: tasks) {
-//                    if (task.getId().equals(newTask1.getId())) {
-//                        newTask1IdFound = true;
-//                    }
-//                    if (task.getId().equals(newTask2.getId())) {
-//                        newTask2IdFound = true;
-//                    }
-//                }
-//                assertTrue(newTask1IdFound);
-//                assertTrue(newTask2IdFound);
-//            }
-//
-//            @Override
-//            public void onDataNotAvailable() {
-//                fail();
-//            }
-//        });
-//    }
+
+   private static final String TITLE = "title";
+
+   private static final String TITLE2 = "title2";
+
+   private static final String TITLE3 = "title3";
+
+   private TasksLocalDataSource mLocalDataSource;
+
+   @Before
+   public void setup() {
+      mLocalDataSource = TasksLocalDataSource.getInstance(
+            InstrumentationRegistry.getTargetContext());
+   }
+
+   @After
+   public void cleanUp() {
+      mLocalDataSource.deleteAllTasks();
+   }
+
+   @Test
+   public void testPreConditions() {
+      assertNotNull(mLocalDataSource);
+   }
+
+   @Test
+   public void saveTask_retrievesTask() {
+      // Given a new task
+      final Task newTask = new Task(TITLE, "");
+
+      // When saved into the persistent repository
+      TestSubscriber<Object> testSubscriber1 = new TestSubscriber<>();
+      mLocalDataSource.saveTask(newTask).subscribe(testSubscriber1);
+
+      TestSubscriber<Task> testSubscriber2 = new TestSubscriber<>();
+      mLocalDataSource.getTask(newTask.getId()).subscribe(testSubscriber2);
+      testSubscriber2.assertNoErrors();
+      testSubscriber2.assertValue(newTask);
+
+   }
+
+   @Test
+   public void completeTask_retrievedTaskIsComplete() {
+      // Given a new task in the persistent repository
+      final Task newTask = new Task(TITLE, "");
+      TestSubscriber<Object> testSubscriber1 = new TestSubscriber<>();
+      mLocalDataSource.saveTask(newTask).subscribe(testSubscriber1);
+
+      // When completed in the persistent repository
+      TestSubscriber<Object> testSubscriber2 = new TestSubscriber<>();
+      mLocalDataSource.completeTask(newTask).subscribe(testSubscriber2);
+
+      // When we retrieve the task form the repository
+      TestSubscriber<Task> testSubscriber3 = new TestSubscriber<>();
+      mLocalDataSource.getTask(newTask.getId()).subscribe(testSubscriber3);
+      testSubscriber3.assertNoErrors();
+      List<Task> onNextEvents = testSubscriber3.getOnNextEvents();
+      Task completedTask = onNextEvents.get(0);
+
+      //The task is completed
+      assertEquals(completedTask, newTask);
+      assertTrue(completedTask.isCompleted());
+   }
+
+   @Test
+   public void activateTask_retrievedTaskIsActive() {
+      // Given a new completed task in the persistent repository
+      final Task newTask = new Task(TITLE, "");
+      mLocalDataSource.saveTask(newTask).subscribe(new TestSubscriber<>());
+      mLocalDataSource.completeTask(newTask).subscribe(new TestSubscriber<>());
+
+      // When activated in the persistent repository
+      mLocalDataSource.activateTask(newTask).subscribe(new TestSubscriber<>());
+
+      // Then the task can be retrieved from the persistent repository and is active
+      TestSubscriber<Task> testSubscriber = new TestSubscriber<>();
+      mLocalDataSource.getTask(newTask.getId()).subscribe(testSubscriber);
+      testSubscriber.assertValueCount(1);
+      Task result = testSubscriber.getOnNextEvents().get(0);
+
+      assertThat(result.isActive(), is(true));
+      assertThat(result.isCompleted(), is(false));
+   }
+
+   @Test
+   public void clearCompletedTask_taskNotRetrievable() {
+      // Given 2 new completed tasks and 1 active task in the persistent repository
+      final Task newTask1 = new Task(TITLE, "");
+      mLocalDataSource.saveTask(newTask1).subscribe(new TestSubscriber<>());
+      mLocalDataSource.completeTask(newTask1).subscribe(new TestSubscriber<>());
+      final Task newTask2 = new Task(TITLE2, "");
+      mLocalDataSource.saveTask(newTask2).subscribe(new TestSubscriber<>());
+      mLocalDataSource.completeTask(newTask2).subscribe(new TestSubscriber<>());
+      final Task newTask3 = new Task(TITLE3, "");
+      mLocalDataSource.saveTask(newTask3).subscribe(new TestSubscriber<>());
+
+      // When completed tasks are cleared in the repository
+      mLocalDataSource.clearCompletedTasks().subscribe(new TestSubscriber<>());
+
+      // Then the completed tasks cannot be retrieved and the active one can
+      TestSubscriber<Task> testSubscriber1 = new TestSubscriber<>();
+      mLocalDataSource.getTask(newTask1.getId()).subscribe(testSubscriber1);
+      testSubscriber1.assertNoValues();
+
+      TestSubscriber<Task> testSubscriber2 = new TestSubscriber<>();
+      mLocalDataSource.getTask(newTask2.getId()).subscribe(testSubscriber2);
+      testSubscriber2.assertNoValues();
+
+      TestSubscriber<Task> testSubscriber3 = new TestSubscriber<>();
+      mLocalDataSource.getTask(newTask3.getId()).subscribe(testSubscriber3);
+      testSubscriber3.assertValueCount(1);
+   }
+
+   @Test
+   public void deleteAllTasks_emptyListOfRetrievedTask() {
+      // Given a new task in the persistent repository and a mocked callback
+      Task newTask = new Task(TITLE, "");
+      mLocalDataSource.saveTask(newTask).subscribe(new TestSubscriber<>());
+
+      // When all tasks are deleted
+      mLocalDataSource.deleteAllTasks();
+
+      // Then the retrieved tasks is an empty list
+      TestSubscriber<ArrayList<Task>> testSubscriber = new TestSubscriber<>();
+      mLocalDataSource.getTasks().subscribe(testSubscriber);
+      List<ArrayList<Task>> onNextEvents = testSubscriber.getOnNextEvents();
+      assertThat(onNextEvents.get(0).size(), is(0));
+   }
+
+    @Test
+    public void getTasks_retrieveSavedTasks() {
+        // Given 2 new tasks in the persistent repository
+        final Task newTask1 = new Task(TITLE, "");
+        mLocalDataSource.saveTask(newTask1).subscribe(new TestSubscriber<>());
+
+        final Task newTask2 = new Task(TITLE, "");
+        mLocalDataSource.saveTask(newTask2).subscribe(new TestSubscriber<>());
+
+
+       TestSubscriber<ArrayList<Task>> testSubscriber = new TestSubscriber<>();
+       mLocalDataSource.getTasks().subscribe(testSubscriber);
+
+
+
+       testSubscriber.assertNoErrors();
+       ArrayList<Task> tasks = testSubscriber.getOnNextEvents().get(0);
+       assertThat(tasks.size(),is(2));
+       assertThat(tasks.get(0).getId(),is(newTask1.getId()));
+       assertThat(tasks.get(1).getId(),is(newTask2.getId()));
+    }
 }

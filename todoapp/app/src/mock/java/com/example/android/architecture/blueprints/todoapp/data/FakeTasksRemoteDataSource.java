@@ -121,6 +121,7 @@ public class FakeTasksRemoteDataSource implements TasksDataSource {
                         it.remove();
                     }
                 }
+                completableSubscriber.onCompleted();
             }
         });
 

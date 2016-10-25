@@ -20,7 +20,7 @@ public abstract class UseCaseRx<R extends UseCaseRx.RequestValues> {
    }
 
    /**
-    * Builds an {@link rx.Observable} which will be used when executing the current {@link UseCase}.
+    * Builds an {@link rx.Observable} which will be used when executing the current {@link UseCaseRx}.
     */
    protected abstract Observable buildUseCaseObservable(R requestValues);
 

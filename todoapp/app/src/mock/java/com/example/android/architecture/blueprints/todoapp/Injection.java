@@ -22,6 +22,7 @@ import android.support.annotation.NonNull;
 import com.example.android.architecture.blueprints.todoapp.addedittask.domain.usecase.DeleteTask;
 import com.example.android.architecture.blueprints.todoapp.addedittask.domain.usecase.GetTask;
 import com.example.android.architecture.blueprints.todoapp.addedittask.domain.usecase.SaveTask;
+import com.example.android.architecture.blueprints.todoapp.data.FakeTasksRemoteDataSource;
 import com.example.android.architecture.blueprints.todoapp.data.source.TasksDataSource;
 import com.example.android.architecture.blueprints.todoapp.data.source.TasksRepository;
 import com.example.android.architecture.blueprints.todoapp.data.source.local.TasksLocalDataSource;
@@ -51,6 +52,11 @@ public class Injection {
       checkNotNull(context);
       return TasksRepository.getInstance(TasksRemoteDataSource.getInstance(),
             TasksLocalDataSource.getInstance(context));
+   }
+
+   public static TasksRepository provideFakeTasksRepository() {
+      return TasksRepository.getInstance(FakeTasksRemoteDataSource.getInstance(),
+            FakeTasksRemoteDataSource.getInstance());
    }
 
    public static Scheduler providePostExecutionThread() {

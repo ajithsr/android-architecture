@@ -22,6 +22,7 @@ import com.example.android.architecture.blueprints.todoapp.UseCaseRx;
 import com.example.android.architecture.blueprints.todoapp.data.source.TasksRepository;
 import com.example.android.architecture.blueprints.todoapp.tasks.domain.model.Task;
 
+import rx.Completable;
 import rx.Observable;
 import rx.Scheduler;
 
@@ -44,7 +45,8 @@ public class SaveTask extends UseCaseRx<SaveTask.RequestValues> {
     @Override
     protected Observable buildUseCaseObservable(RequestValues requestValues) {
         Task task = requestValues.getTask();
-        return tasksRepository.saveTask(task).toObservable();
+        Completable completable = tasksRepository.saveTask(task);
+        return completable.toObservable();
     }
 
     public static final class RequestValues extends UseCaseRx.RequestValues {
