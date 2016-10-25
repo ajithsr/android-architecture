@@ -1,106 +1,79 @@
-# Android Architecture Blueprints [beta]
+# Android Architecture Blueprints [beta] - MVP + Clean Architecture
 
-<img src="https://github.com/googlesamples/android-architecture/wiki/images/aab-logo.png" alt="Android Architecture Blueprints"/>
+Project owner: Jorge J. Barroso ([Karumi](http://github.com/Karumi))
 
-The Android framework offers a lot of flexibility when it comes to defining how
-to organize and <em>architect</em> an Android app. This freedom, whilst very valuable, can also result in apps
-with large classes, inconsistent naming and architectures (or lack of) that can
-make testing, maintaining and extending difficult.
+### Summary
+This sample stands on the principles of [Clean Architecture](https://blog.8thlight.com/uncle-bob/2012/08/13/the-clean-architecture.html).
 
-Android Architecture Blueprints is meant to demonstrate possible ways to help
-with these common problems. In this project we offer the same application
-implemented using different architectural concepts and tools.
+It's based on the [MVP sample](https://github.com/googlesamples/android-architecture/tree/todo-mvp), adding a domain layer between the presentation layer and repositories, splitting the app in three layers:
 
-You can use these samples as a reference or as a starting point for creating
-your own apps. The focus here is on code structure, architecture, testing and
-maintainability. However, bear in mind that there are many ways to build apps
-with these architectures and tools, depending on your priorities, so these
-shouldn't be considered canonical examples. The UI is deliberately kept simple.
+<img src="https://github.com/googlesamples/android-architecture/wiki/images/mvp-clean.png" alt="Diagram"/>
 
-## Samples
+* **MVP**: Model View Presenter pattern from the base sample.
+* **Domain**: Holds all business logic. The domain layer starts with classes named *use cases* or *interactors* used by the application presenters. These *use cases* represent all the possible actions a developer can perform from the presentation layer.
+* **Repository**: Repository pattern from the base sample.  
 
-All projects are released in their own branch. Check each project's README for
-more information.
+### Key concepts
+The big difference with base MVP sample is the use of the Domain layer and *use cases*. Moving the domain layer from the presenters will help to avoid code repetition on presenters (e.g. [Task filters](https://github.com/googlesamples/android-architecture/tree/todo-mvp-clean/todoapp/app/src/main/java/com/example/android/architecture/blueprints/todoapp/tasks/domain/filter)).
 
-### Stable samples
+*Use cases* define the operations that the app needs. This increases readability since the names of the classes make the purpose obvious (see [tasks/domain/usecase/](https://github.com/googlesamples/android-architecture/tree/todo-mvp-clean/todoapp/app/src/main/java/com/example/android/architecture/blueprints/todoapp/tasks/domain/usecase)).
 
-  * [todo-mvp/](https://github.com/googlesamples/android-architecture/tree/todo-mvp/) - Basic Model-View-Presenter architecture.
-  * [todo-mvp-loaders/](https://github.com/googlesamples/android-architecture/tree/todo-mvp-loaders/) - Based on todo-mvp, fetches data using Loaders.
-  * [todo-databinding/](https://github.com/googlesamples/android-architecture/tree/todo-databinding/) - Based on todo-mvp, uses the Data Binding Library.
-  * [todo-mvp-clean/](https://github.com/googlesamples/android-architecture/tree/todo-mvp-clean/) - Based on todo-mvp, uses concepts from Clean Architecture.
-  * [todo-mvp-dagger/](https://github.com/googlesamples/android-architecture/tree/todo-mvp-dagger/) - Based on todo-mvp, uses Dagger2 for Dependency Injection
-  * [todo-mvp-contentproviders/](https://github.com/googlesamples/android-architecture/tree/todo-mvp-contentproviders/) - Based on todo-mvp-loaders, fetches data using Loaders and uses Content Providers
-  * [todo-mvp-rxjava/](https://github.com/googlesamples/android-architecture/tree/todo-mvp-rxjava/) - Based on todo-mvp, uses RxJava for concurrency and data layer abstraction.
+*Use cases* are good for operation reuse over our domain code. [`CompleteTask`] (https://github.com/googlesamples/android-architecture/blob/todo-mvp-clean/todoapp/app/src/main/java/com/example/android/architecture/blueprints/todoapp/tasks/domain/usecase/CompleteTask.java) is a good example of this as it's used from both the [`TaskDetailPresenter`](https://github.com/googlesamples/android-architecture/blob/todo-mvp-clean/todoapp/app/src/main/java/com/example/android/architecture/blueprints/todoapp/taskdetail/TaskDetailPresenter.java) and the [`TasksPresenter`](https://github.com/googlesamples/android-architecture/blob/todo-mvp-clean/todoapp/app/src/main/java/com/example/android/architecture/blueprints/todoapp/tasks/TasksPresenter.java).
 
-### Samples in progress
-  * [dev-todo-mvp-tablet/](https://github.com/googlesamples/android-architecture/tree/dev-todo-mvp-tablet/) - Based on todo-mvp, adds a master/detail view for tablets.
+The execution of these *use cases* is done in a background thread using the [command pattern](http://www.oodesign.com/command-pattern.html). The domain layer is completely decoupled from the Android SDK or other third party libraries.
 
-Also, see ["New sample" issues](https://github.com/googlesamples/android-architecture/issues?q=is%3Aissue+is%3Aopen+label%3A%22New+sample%22) for planned samples.
+### Issues/notes
+*Use cases* run off the main thread, which is a good solution for Android apps.  This is done as soon as possible to avoid blocking the UI thread. We decided to use a command pattern and execute each use case with a thread pool, but we can implement the same with RxJava or Promises.
 
-### External samples
-[External samples](https://github.com/googlesamples/android-architecture/wiki/External-samples) are variants that may not be in sync with the rest of the branches.
- * [todo-mvp-fragmentless/](https://github.com/Syhids/android-architecture/tree/todo-mvp-fragmentless) - Based on todo-mvp, uses Android views instead of Fragments.
- * [todo-mvp-conductor/](https://github.com/gregpearce/android-architecture/tree/todo-mvp-conductor) - Based on todo-mvp, uses the Conductor framework to refactor to a single Activity architecture.
+We are using asynchronous repositories, but there's no need to do this any more because use cases execute off the main thread. This is kept to maintain the sample as similar as possible to the original one.
 
-### What does <em>beta</em> mean?
+We recommend using different models for View, domain and API layers, but in this case all models are immutable so there's no need to duplicate them. If View models contained any Android-related fields, we would use two models, one for domain and other for View and a mapper class that converts between them.
 
-We're still making decisions that could affect all samples so we're keeping the
-initial number of variants low before the stable release.
+Callbacks have an `onError` method that in a real app should contain information about the problem.
 
-## Why a to-do application?
+### Testability
 
-The aim of the app is to be simple enough that it's understood quickly, but
-complex enough to showcase difficult design decisions and testing scenarios.
-Check out the [app's specification](https://github.com/googlesamples/android-architecture/wiki/To-do-app-specification).
+With this approach, all domain code is tested with unit tests. This can be extended with integration tests, that cover from Use Cases to the boundaries of the view and repository.
 
-<img src="https://github.com/googlesamples/android-architecture/wiki/images/tasks2.png" alt="Screenshot" width="160" style="display: inline; float: right"/>
+### Dependencies
 
-Also, a similar project exists to compare JavaScript frameworks, called [TodoMVC](https://github.com/tastejs/todomvc).
+Apart from support and testing libraries, none.
 
-## Which sample should I choose for my app?
+## Features
 
-That's for you to decide: each sample has a README where you'll find metrics
-and subjective assessments. Your mileage may vary depending on the size of the
-app, the size and experience of your team, the amount of maintenance that you
-foresee, whether you need a tablet layout or support multiple platforms, how
-compact you like your codebase, etc.
+### Complexity - understandability
 
-See also:
-* [Samples at a glance](https://github.com/googlesamples/android-architecture/wiki/Samples-at-a-glance)
-* [How to compare samples](https://github.com/googlesamples/android-architecture/wiki/How-to-compare-samples)
+#### Use of architectural frameworks/libraries/tools:
 
-## Opening a sample in Android Studio
+None
 
-First check out one of the sample branches (`master` won't compile), and then choose to open the `todoapp/` directory. Example:
+#### Conceptual complexity
 
-  * `git clone git@github.com:googlesamples/android-architecture.git`
-  * `git checkout todo-mvp` (or replace `todo-mvp` with the project you want to check out)
-  * In Android Studio open the `todoapp/` directory.
+Medium-Low, it's an MVP approach with a new layer that handles domain logic.
 
-## Who is behind this project?
+### Code metrics
 
-This project is **built by the community** and curated by Google and core maintainers.
 
-### External contributors
+Adding a domain layer produces more classes and Java code.
 
-[David González](http://github.com/malmstein) - Core developer (Content Providers sample)
+```
+-------------------------------------------------------------------------------
+Language                     files          blank        comment           code
+-------------------------------------------------------------------------------
+Java                            64           1278           1777           4121 (3450 in MVP)
+XML                             34             97            337            601
+-------------------------------------------------------------------------------
+SUM:                            98           1375           2114           4722
+-------------------------------------------------------------------------------
 
-[Karumi](http://github.com/Karumi) - Developers (MVP Clean architecture sample)
+```
+### Maintainability
 
-[Natalie Masse](http://github.com/freewheelnat) - Core developer
+#### Ease of amending or adding a feature / Learning cost
+Very easy. This approach is more verbose, making the maintenance tasks more obvious.
 
-[Erik Hellman](https://github.com/ErikHellman) - Developer (MVP RxJava sample)
 
-[Saúl Molinero](https://github.com/saulmm) - Developer (MVP Dagger sample)
 
-[Florina Muntenescu](https://github.com/florina-muntenescu) - Developer (MVP RxJava sample)
 
-### Googlers
 
-[Jose Alcérreca](http://github.com/JoseAlcerreca) - Lead/Core developer
-
-[Stephan Linzner](http://github.com/slinzner) - Core developer
-
-[Mustafa Kurtuldu](https://github.com/mustafa-x) - UX/design
-
-Want to be part of it? Read [how to become a contributor](https://github.com/googlesamples/android-architecture/blob/master/CONTRIBUTING.md) and the [contributor's guide](https://github.com/googlesamples/android-architecture/wiki/Contributions)
+>>>>>>> todo-mvp-clean
