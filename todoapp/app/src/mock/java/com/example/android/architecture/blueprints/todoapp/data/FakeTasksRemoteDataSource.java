@@ -28,8 +28,6 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import rx.Observable;
-
 /**
  * Implementation of a remote data source with static access to the data for easy testing.
  */
@@ -51,13 +49,13 @@ public class FakeTasksRemoteDataSource implements TasksDataSource {
    }
 
    @Override
-   public Observable<ArrayList<Task>> getTasks() {
-      return Observable.just(Lists.newArrayList(TASKS_SERVICE_DATA.values()));
+   public ArrayList<Task> getTasks() {
+      return Lists.newArrayList(TASKS_SERVICE_DATA.values());
    }
 
    @Override
-   public Observable<Task> getTask(@NonNull String taskId) {
-      return Observable.just(TASKS_SERVICE_DATA.get(taskId));
+   public Task getTask(@NonNull String taskId) {
+      return TASKS_SERVICE_DATA.get(taskId);
    }
 
    @Override

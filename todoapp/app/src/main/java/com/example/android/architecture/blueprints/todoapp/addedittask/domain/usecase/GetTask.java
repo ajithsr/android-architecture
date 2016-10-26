@@ -41,8 +41,8 @@ public class GetTask extends UseCaseRx<GetTask.RequestValues> {
     }
 
     @Override
-    protected Observable buildUseCaseObservable(GetTask.RequestValues requestValues) {
-        return tasksRepository.getTask(requestValues.getTaskId());
+    protected Observable<Task> buildUseCaseObservable(GetTask.RequestValues requestValues) {
+        return Observable.just(tasksRepository.getTask(requestValues.getTaskId()));
     }
 
     public static final class RequestValues extends UseCaseRx.RequestValues {

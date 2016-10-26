@@ -26,9 +26,6 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
-
-import rx.Observable;
 
 /**
  * Implementation of the data source that adds a latency simulating network.
@@ -68,14 +65,26 @@ public class TasksRemoteDataSource implements TasksDataSource {
      * returns an error.
      */
     @Override
-    public Observable<ArrayList<Task>> getTasks() {
-        return Observable.just(Lists.newArrayList(TASKS_SERVICE_DATA.values())).delay(SERVICE_LATENCY_IN_MILLIS, TimeUnit.MICROSECONDS);
+    public ArrayList<Task> getTasks() {
+
+        try {
+            Thread.sleep(SERVICE_LATENCY_IN_MILLIS);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        return Lists.newArrayList(TASKS_SERVICE_DATA.values());
     }
 
 
     @Override
-    public Observable<Task> getTask(@NonNull String taskId) {
-        return Observable.just(TASKS_SERVICE_DATA.get(taskId)).delay(SERVICE_LATENCY_IN_MILLIS, TimeUnit.MICROSECONDS);
+    public Task getTask(@NonNull String taskId) {
+        try {
+            Thread.sleep(SERVICE_LATENCY_IN_MILLIS);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        return TASKS_SERVICE_DATA.get(taskId);
     }
 
     @Override

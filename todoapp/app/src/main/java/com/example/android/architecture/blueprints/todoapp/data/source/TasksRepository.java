@@ -28,9 +28,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import rx.Observable;
-import rx.functions.Func1;
-
 import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
@@ -95,19 +92,22 @@ public class TasksRepository implements TasksDataSource {
     * <p>
     */
    @Override
-   public Observable<ArrayList<Task>> getTasks() {
+   public ArrayList<Task> getTasks() {
 
       // Respond immediately with cache if available and not dirty
       if (mCachedTasks != null && !mCacheIsDirty) {
-         return Observable.just(new ArrayList<>(mCachedTasks.values()));
+         return new ArrayList<>(mCachedTasks.values());
       }
 
       if (mCacheIsDirty) {
          // If the cache is dirty we need to fetch new data from the network.
-         return getTasksFromRemoteDataSource();
+         return getTasksFromRemoteDataSourceAndRefresh();
       } else {
-         return mTasksLocalDataSource.getTasks()
-               .switchIfEmpty(getTasksFromRemoteDataSource());
+         ArrayList<Task> tasks = mTasksLocalDataSource.getTasks();
+         if(tasks.isEmpty())
+            return getTasksFromRemoteDataSourceAndRefresh();
+         else
+            return tasks;
       }
    }
 
@@ -193,16 +193,22 @@ public class TasksRepository implements TasksDataSource {
     * <p>
     */
    @Override
-   public Observable<Task> getTask(@NonNull final String taskId) {
+   public Task getTask(@NonNull final String taskId) {
       checkNotNull(taskId);
 
       Task cachedTask = getTaskWithId(taskId);
       // Respond immediately with cache if available
       if (cachedTask != null) {
-         return Observable.just(cachedTask);
+         return cachedTask;
       }
-      return mTasksLocalDataSource.getTask(taskId)
-            .switchIfEmpty(mTasksRemoteDataSource.getTask(taskId));
+
+      Task task = mTasksLocalDataSource.getTask(taskId);
+      if(task==null){
+         return mTasksRemoteDataSource.getTask(taskId);
+      }
+      else{
+         return task;
+      }
    }
 
 
@@ -231,16 +237,11 @@ public class TasksRepository implements TasksDataSource {
 
    }
 
-   private Observable<ArrayList<Task>> getTasksFromRemoteDataSource() {
-
-      return mTasksRemoteDataSource.getTasks().map(new Func1<ArrayList<Task>, ArrayList<Task>>() {
-         @Override
-         public ArrayList<Task> call(ArrayList<Task> tasks) {
-            refreshCache(tasks);
-            refreshLocalDataSource(tasks);
-            return tasks;
-         }
-      });
+   private ArrayList<Task> getTasksFromRemoteDataSourceAndRefresh() {
+      ArrayList<Task> tasks = mTasksRemoteDataSource.getTasks();
+      refreshCache(tasks);
+      refreshLocalDataSource(tasks);
+      return tasks;
 
    }
 

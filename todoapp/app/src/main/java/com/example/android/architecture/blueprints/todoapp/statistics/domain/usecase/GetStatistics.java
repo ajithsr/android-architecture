@@ -18,37 +18,39 @@ import rx.functions.Func1;
  */
 public class GetStatistics extends UseCaseRx<GetStatistics.RequestValues> {
 
-    private TasksRepository tasksRepository;
+   private TasksRepository tasksRepository;
 
-    public GetStatistics(Scheduler threadExecutor, Scheduler postExecutionThread, @NonNull TasksRepository tasksRepository) {
-        super(threadExecutor, postExecutionThread);
-        this.tasksRepository = tasksRepository;
-    }
+   public GetStatistics(Scheduler threadExecutor, Scheduler postExecutionThread, @NonNull TasksRepository tasksRepository) {
+      super(threadExecutor, postExecutionThread);
+      this.tasksRepository = tasksRepository;
+   }
 
-    @Override
-    protected Observable<Statistics> buildUseCaseObservable(RequestValues requestValues) {
-        return tasksRepository.getTasks().map(new Func1<ArrayList<Task>, Statistics>() {
+   @Override
+   protected Observable<Statistics> buildUseCaseObservable(RequestValues requestValues) {
 
-            @Override
-            public Statistics call(ArrayList<Task> tasks) {
+      return Observable.just(tasksRepository.getTasks())
+            .map(new Func1<ArrayList<Task>, Statistics>() {
 
-                int activeTasks = 0;
-                int completedTasks = 0;
+               @Override
+               public Statistics call(ArrayList<Task> tasks) {
 
-                // We calculate number of active and completed tasks
-                for (Task task : tasks) {
-                    if (task.isCompleted()) {
+                  int activeTasks = 0;
+                  int completedTasks = 0;
+
+                  // We calculate number of active and completed tasks
+                  for (Task task : tasks) {
+                     if (task.isCompleted()) {
                         completedTasks += 1;
-                    } else {
+                     } else {
                         activeTasks += 1;
-                    }
-                }
-                return new Statistics(completedTasks,activeTasks);
-            }
-        });
-    }
+                     }
+                  }
+                  return new Statistics(completedTasks, activeTasks);
+               }
+            });
+   }
 
-    public static class RequestValues extends UseCaseRx.RequestValues {
-    }
+   public static class RequestValues extends UseCaseRx.RequestValues {
+   }
 
 }

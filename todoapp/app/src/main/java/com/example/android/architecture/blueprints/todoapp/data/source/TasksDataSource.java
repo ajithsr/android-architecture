@@ -22,8 +22,6 @@ import com.example.android.architecture.blueprints.todoapp.tasks.domain.model.Ta
 
 import java.util.ArrayList;
 
-import rx.Observable;
-
 /**
  * Main entry point for accessing tasks data.
  * <p>
@@ -34,9 +32,9 @@ import rx.Observable;
  */
 public interface TasksDataSource {
 
-    Observable<ArrayList<Task>> getTasks();
+    ArrayList<Task> getTasks();
 
-    Observable<Task> getTask(@NonNull String taskId);
+    Task getTask(@NonNull String taskId);
 
     void saveTask(@NonNull Task task);
 

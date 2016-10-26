@@ -28,8 +28,6 @@ import com.example.android.architecture.blueprints.todoapp.tasks.domain.model.Ta
 
 import java.util.ArrayList;
 
-import rx.Observable;
-import rx.Subscriber;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -56,11 +54,9 @@ public class TasksLocalDataSource implements TasksDataSource {
    }
 
    @Override
-   public Observable<ArrayList<Task>> getTasks() {
+   public ArrayList<Task> getTasks() {
 
-      return Observable.create(new Observable.OnSubscribe<ArrayList<Task>>() {
-         @Override
-         public void call(Subscriber<? super ArrayList<Task>> subscriber) {
+
             ArrayList<Task> tasks = new ArrayList<Task>();
             SQLiteDatabase db = mDbHelper.getReadableDatabase();
 
@@ -91,21 +87,13 @@ public class TasksLocalDataSource implements TasksDataSource {
             }
 
             db.close();
-            if(!tasks.isEmpty()){
-               subscriber.onNext(tasks);}
-            subscriber.onCompleted();
-         }
-      });
+
+      return tasks;
    }
 
 
    @Override
-   public Observable<Task> getTask(@NonNull final String taskId) {
-
-      return Observable.create(new Observable.OnSubscribe<Task>() {
-         @Override
-         public void call(Subscriber<? super Task> subscriber) {
-
+   public Task getTask(@NonNull final String taskId) {
             SQLiteDatabase db = mDbHelper.getReadableDatabase();
 
             String[] projection = {
@@ -138,11 +126,7 @@ public class TasksLocalDataSource implements TasksDataSource {
             }
 
             db.close();
-            if(task!=null){
-               subscriber.onNext(task);}
-            subscriber.onCompleted();
-         }
-      });
+            return task;
    }
 
 

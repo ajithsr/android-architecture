@@ -31,11 +31,9 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import java.util.ArrayList;
-import java.util.List;
-
-import rx.observers.TestSubscriber;
 
 import static junit.framework.Assert.assertEquals;
+import static junit.framework.Assert.assertNull;
 import static junit.framework.Assert.assertTrue;
 import static junit.framework.TestCase.assertNotNull;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -79,11 +77,8 @@ public class TasksLocalDataSourceTest {
 
       // When saved into the persistent repository
       mLocalDataSource.saveTask(newTask);
-
-      TestSubscriber<Task> testSubscriber2 = new TestSubscriber<>();
-      mLocalDataSource.getTask(newTask.getId()).subscribe(testSubscriber2);
-      testSubscriber2.assertNoErrors();
-      testSubscriber2.assertValue(newTask);
+      Task taskExpected = mLocalDataSource.getTask(newTask.getId());
+      assertThat(newTask, is(taskExpected));
 
    }
 
@@ -97,11 +92,7 @@ public class TasksLocalDataSourceTest {
       mLocalDataSource.completeTask(newTask);
 
       // When we retrieve the task form the repository
-      TestSubscriber<Task> testSubscriber3 = new TestSubscriber<>();
-      mLocalDataSource.getTask(newTask.getId()).subscribe(testSubscriber3);
-      testSubscriber3.assertNoErrors();
-      List<Task> onNextEvents = testSubscriber3.getOnNextEvents();
-      Task completedTask = onNextEvents.get(0);
+      Task completedTask = mLocalDataSource.getTask(newTask.getId());
 
       //The task is completed
       assertEquals(completedTask, newTask);
@@ -119,11 +110,7 @@ public class TasksLocalDataSourceTest {
       mLocalDataSource.activateTask(newTask);
 
       // Then the task can be retrieved from the persistent repository and is active
-      TestSubscriber<Task> testSubscriber = new TestSubscriber<>();
-      mLocalDataSource.getTask(newTask.getId()).subscribe(testSubscriber);
-      testSubscriber.assertValueCount(1);
-      Task result = testSubscriber.getOnNextEvents().get(0);
-
+      Task result = mLocalDataSource.getTask(newTask.getId());
       assertThat(result.isActive(), is(true));
       assertThat(result.isCompleted(), is(false));
    }
@@ -144,17 +131,14 @@ public class TasksLocalDataSourceTest {
       mLocalDataSource.clearCompletedTasks();
 
       // Then the completed tasks cannot be retrieved and the active one can
-      TestSubscriber<Task> testSubscriber1 = new TestSubscriber<>();
-      mLocalDataSource.getTask(newTask1.getId()).subscribe(testSubscriber1);
-      testSubscriber1.assertNoValues();
+      Task task = mLocalDataSource.getTask(newTask1.getId());
+      assertNull(task);
 
-      TestSubscriber<Task> testSubscriber2 = new TestSubscriber<>();
-      mLocalDataSource.getTask(newTask2.getId()).subscribe(testSubscriber2);
-      testSubscriber2.assertNoValues();
+      Task task1 = mLocalDataSource.getTask(newTask2.getId());
+      assertNull(task1);
 
-      TestSubscriber<Task> testSubscriber3 = new TestSubscriber<>();
-      mLocalDataSource.getTask(newTask3.getId()).subscribe(testSubscriber3);
-      testSubscriber3.assertValueCount(1);
+      Task task2 = mLocalDataSource.getTask(newTask3.getId());
+      assertNotNull(task2);
    }
 
    @Test
@@ -167,30 +151,22 @@ public class TasksLocalDataSourceTest {
       mLocalDataSource.deleteAllTasks();
 
       // Then the retrieved tasks is an empty list
-      TestSubscriber<ArrayList<Task>> testSubscriber = new TestSubscriber<>();
-      mLocalDataSource.getTasks().subscribe(testSubscriber);
-      testSubscriber.assertNoValues();
+      ArrayList<Task> tasks = mLocalDataSource.getTasks();
+      assertThat(tasks.size(), is(0));
    }
 
-    @Test
-    public void getTasks_retrieveSavedTasks() {
-        // Given 2 new tasks in the persistent repository
-        final Task newTask1 = new Task(TITLE, "");
-        mLocalDataSource.saveTask(newTask1);
+   @Test
+   public void getTasks_retrieveSavedTasks() {
+      // Given 2 new tasks in the persistent repository
+      final Task newTask1 = new Task(TITLE, "");
+      mLocalDataSource.saveTask(newTask1);
 
-        final Task newTask2 = new Task(TITLE, "");
-        mLocalDataSource.saveTask(newTask2);
+      final Task newTask2 = new Task(TITLE, "");
+      mLocalDataSource.saveTask(newTask2);
 
-
-       TestSubscriber<ArrayList<Task>> testSubscriber = new TestSubscriber<>();
-       mLocalDataSource.getTasks().subscribe(testSubscriber);
-
-
-
-       testSubscriber.assertNoErrors();
-       ArrayList<Task> tasks = testSubscriber.getOnNextEvents().get(0);
-       assertThat(tasks.size(),is(2));
-       assertThat(tasks.get(0).getId(),is(newTask1.getId()));
-       assertThat(tasks.get(1).getId(),is(newTask2.getId()));
-    }
+      ArrayList<Task> tasks = mLocalDataSource.getTasks();
+      assertThat(tasks.size(), is(2));
+      assertThat(tasks.get(0).getId(), is(newTask1.getId()));
+      assertThat(tasks.get(1).getId(), is(newTask2.getId()));
+   }
 }

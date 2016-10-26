@@ -55,14 +55,17 @@ public class GetTasks extends UseCaseRx<GetTasks.RequestValues> {
       if (requestValues.isForceUpdate()) {
          mTasksRepository.refreshTasks();
       }
-      return mTasksRepository.getTasks().map(new Func1<List<Task>, List<Task>>() {
-         @Override
-         public List<Task> call(List<Task> tasks) {
-            TaskFilter taskFilter = filterFactory.create(requestValues.currentFiltering);
-            List<Task> tasksFiltered = taskFilter.filter(tasks);
-            return tasksFiltered;
-         }
-      });
+
+
+      return Observable.just(mTasksRepository.getTasks())
+            .map(new Func1<List<Task>, List<Task>>() {
+               @Override
+               public List<Task> call(List<Task> tasks) {
+                  TaskFilter taskFilter = filterFactory.create(requestValues.currentFiltering);
+                  List<Task> tasksFiltered = taskFilter.filter(tasks);
+                  return tasksFiltered;
+               }
+            });
    }
 
    public static final class RequestValues extends UseCaseRx.RequestValues {
