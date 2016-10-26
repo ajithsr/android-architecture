@@ -36,6 +36,7 @@ public abstract class UseCaseRx<R extends UseCaseRx.RequestValues> {
             .subscribeOn(threadExecutor)
             .observeOn(postExecutionThread)
             .subscribe(useCaseSubscriber);
+
    }
 
    /**
