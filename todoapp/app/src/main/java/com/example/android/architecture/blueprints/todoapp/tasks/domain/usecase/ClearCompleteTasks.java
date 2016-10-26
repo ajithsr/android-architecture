@@ -23,6 +23,7 @@ import com.example.android.architecture.blueprints.todoapp.data.source.TasksRepo
 
 import rx.Observable;
 import rx.Scheduler;
+import rx.Subscriber;
 
 /**
  * Deletes tasks marked as completed.
@@ -38,7 +39,14 @@ public class ClearCompleteTasks extends UseCaseRx<ClearCompleteTasks.RequestValu
 
     @Override
     protected Observable buildUseCaseObservable(RequestValues requestValues) {
-        return tasksRepository.clearCompletedTasks().toObservable();
+
+        return Observable.create(new Observable.OnSubscribe<Object>() {
+            @Override
+            public void call(Subscriber<? super Object> subscriber) {
+                tasksRepository.clearCompletedTasks();
+                subscriber.onCompleted();
+            }
+        });
     }
 
     public static class RequestValues extends UseCaseRx.RequestValues { }

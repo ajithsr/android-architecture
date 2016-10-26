@@ -28,8 +28,6 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import rx.Completable;
-import rx.CompletableSubscriber;
 import rx.Observable;
 
 /**
@@ -37,122 +35,88 @@ import rx.Observable;
  */
 public class FakeTasksRemoteDataSource implements TasksDataSource {
 
-    private static FakeTasksRemoteDataSource INSTANCE;
+   private static FakeTasksRemoteDataSource INSTANCE;
 
-    private static final Map<String, Task> TASKS_SERVICE_DATA = new LinkedHashMap<>();
+   private static final Map<String, Task> TASKS_SERVICE_DATA = new LinkedHashMap<>();
 
-    // Prevent direct instantiation.
-    private FakeTasksRemoteDataSource() {}
+   // Prevent direct instantiation.
+   private FakeTasksRemoteDataSource() {
+   }
 
-    public static FakeTasksRemoteDataSource getInstance() {
-        if (INSTANCE == null) {
-            INSTANCE = new FakeTasksRemoteDataSource();
-        }
-        return INSTANCE;
-    }
+   public static FakeTasksRemoteDataSource getInstance() {
+      if (INSTANCE == null) {
+         INSTANCE = new FakeTasksRemoteDataSource();
+      }
+      return INSTANCE;
+   }
 
-    @Override
-    public Observable<ArrayList<Task>> getTasks() {
-        return Observable.just(Lists.newArrayList(TASKS_SERVICE_DATA.values()));
-    }
+   @Override
+   public Observable<ArrayList<Task>> getTasks() {
+      return Observable.just(Lists.newArrayList(TASKS_SERVICE_DATA.values()));
+   }
 
-    @Override
-    public Observable<Task> getTask(@NonNull String taskId) {
-        return Observable.just(TASKS_SERVICE_DATA.get(taskId));
-    }
+   @Override
+   public Observable<Task> getTask(@NonNull String taskId) {
+      return Observable.just(TASKS_SERVICE_DATA.get(taskId));
+   }
 
-    @Override
-    public Completable saveTask(@NonNull final Task task) {
-        return Completable.create(new Completable.OnSubscribe() {
-            @Override
-            public void call(CompletableSubscriber completableSubscriber) {
-                TASKS_SERVICE_DATA.put(task.getId(), task);
-                completableSubscriber.onCompleted();
+   @Override
+   public void saveTask(@NonNull final Task task) {
+      TASKS_SERVICE_DATA.put(task.getId(), task);
+   }
+
+   @Override
+   public void completeTask(@NonNull final Task task) {
+      Task completedTask = new Task(task.getTitle(), task.getDescription(), task.getId(), true);
+      TASKS_SERVICE_DATA.put(task.getId(), completedTask);
+   }
+
+   @Override
+   public void completeTask(@NonNull String taskId) {
+      // Not required for the remote data source.
+   }
+
+   @Override
+   public void activateTask(@NonNull final Task task) {
+            Task activeTask = new Task(task.getTitle(), task.getDescription(), task.getId());
+            TASKS_SERVICE_DATA.put(task.getId(), activeTask);
+   }
+
+   @Override
+   public void activateTask(@NonNull String taskId) {
+      // Not required for the remote data source.
+   }
+
+   @Override
+   public void clearCompletedTasks() {
+            Iterator<Map.Entry<String, Task>> it = TASKS_SERVICE_DATA.entrySet().iterator();
+            while (it.hasNext()) {
+               Map.Entry<String, Task> entry = it.next();
+               if (entry.getValue().isCompleted()) {
+                  it.remove();
+               }
             }
-        });
-    }
+   }
 
-    @Override
-    public Completable completeTask(@NonNull final Task task) {
+   public void refreshTasks() {
+      // Not required because the {@link TasksRepository} handles the logic of refreshing the
+      // tasks from all the available data sources.
+   }
 
-       return Completable.create(new Completable.OnSubscribe() {
-            @Override
-            public void call(CompletableSubscriber completableSubscriber) {
-                Task completedTask = new Task(task.getTitle(), task.getDescription(), task.getId(), true);
-                TASKS_SERVICE_DATA.put(task.getId(), completedTask);
-                completableSubscriber.onCompleted();
-            }
-        });
-    }
+   @Override
+   public void deleteTask(@NonNull final String taskId) {
+            TASKS_SERVICE_DATA.remove(taskId);
+   }
 
-    @Override
-    public Completable completeTask(@NonNull String taskId) {
-        // Not required for the remote data source.
-        return null;
-    }
+   @Override
+   public void deleteAllTasks() {
+      TASKS_SERVICE_DATA.clear();
+   }
 
-    @Override
-    public Completable activateTask(@NonNull final Task task) {
-        return Completable.create(new Completable.OnSubscribe() {
-            @Override
-            public void call(CompletableSubscriber completableSubscriber) {
-                Task activeTask = new Task(task.getTitle(), task.getDescription(), task.getId());
-                TASKS_SERVICE_DATA.put(task.getId(), activeTask);
-                completableSubscriber.onCompleted();
-            }
-        });
-    }
-
-    @Override
-    public Completable activateTask(@NonNull String taskId) {
-        // Not required for the remote data source.
-        return null;
-    }
-
-    @Override
-    public Completable clearCompletedTasks() {
-        return Completable.create(new Completable.OnSubscribe() {
-            @Override
-            public void call(CompletableSubscriber completableSubscriber) {
-                Iterator<Map.Entry<String, Task>> it = TASKS_SERVICE_DATA.entrySet().iterator();
-                while (it.hasNext()) {
-                    Map.Entry<String, Task> entry = it.next();
-                    if (entry.getValue().isCompleted()) {
-                        it.remove();
-                    }
-                }
-                completableSubscriber.onCompleted();
-            }
-        });
-
-    }
-
-    public void refreshTasks() {
-        // Not required because the {@link TasksRepository} handles the logic of refreshing the
-        // tasks from all the available data sources.
-    }
-
-    @Override
-    public Completable deleteTask(@NonNull final String taskId) {
-       return Completable.create(new Completable.OnSubscribe() {
-            @Override
-            public void call(CompletableSubscriber completableSubscriber) {
-                TASKS_SERVICE_DATA.remove(taskId);
-                completableSubscriber.onCompleted();
-            }
-        });
-
-    }
-
-    @Override
-    public void deleteAllTasks() {
-        TASKS_SERVICE_DATA.clear();
-    }
-
-    @VisibleForTesting
-    public void addTasks(Task... tasks) {
-        for (Task task : tasks) {
-            TASKS_SERVICE_DATA.put(task.getId(), task);
-        }
-    }
+   @VisibleForTesting
+   public void addTasks(Task... tasks) {
+      for (Task task : tasks) {
+         TASKS_SERVICE_DATA.put(task.getId(), task);
+      }
+   }
 }

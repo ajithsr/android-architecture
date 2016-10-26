@@ -19,11 +19,12 @@ package com.example.android.architecture.blueprints.todoapp.addedittask.domain.u
 import android.support.annotation.NonNull;
 
 import com.example.android.architecture.blueprints.todoapp.UseCaseRx;
-import com.example.android.architecture.blueprints.todoapp.tasks.domain.model.Task;
 import com.example.android.architecture.blueprints.todoapp.data.source.TasksRepository;
+import com.example.android.architecture.blueprints.todoapp.tasks.domain.model.Task;
 
 import rx.Observable;
 import rx.Scheduler;
+import rx.Subscriber;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -40,8 +41,14 @@ public class DeleteTask extends UseCaseRx<DeleteTask.RequestValues> {
     }
 
     @Override
-    protected Observable buildUseCaseObservable(RequestValues requestValues) {
-        return tasksRepository.deleteTask(requestValues.getTaskId()).toObservable();
+    protected Observable buildUseCaseObservable(final RequestValues requestValues) {
+       return Observable.create(new Observable.OnSubscribe<Object>() {
+            @Override
+            public void call(Subscriber<? super Object> subscriber) {
+                tasksRepository.deleteTask(requestValues.getTaskId());
+                subscriber.onCompleted();
+            }
+        });
     }
 
     public static final class RequestValues extends UseCaseRx.RequestValues {

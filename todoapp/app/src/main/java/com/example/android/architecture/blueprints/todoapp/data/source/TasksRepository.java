@@ -28,10 +28,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import rx.Completable;
-import rx.CompletableSubscriber;
 import rx.Observable;
-import rx.functions.Action0;
 import rx.functions.Func1;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -111,113 +108,82 @@ public class TasksRepository implements TasksDataSource {
       } else {
          return mTasksLocalDataSource.getTasks()
                .switchIfEmpty(getTasksFromRemoteDataSource());
-//
-//         return mTasksLocalDataSource.getTasks().flatMap(new Func1<ArrayList<Task>, Observable<ArrayList<Task>>>() {
-//            @Override
-//            public Observable<ArrayList<Task>> call(ArrayList<Task> tasks) {
-//               if (tasks.size() == 0) {
-//                  return getTasksFromRemoteDataSource();
-//               } else {
-//                  refreshCache(tasks);
-//                  return Observable.just(tasks);
-//               }
-//            }
-//         });
       }
    }
 
 
    @Override
-   public Completable saveTask(@NonNull final Task task) {
+   public void saveTask(@NonNull final Task task) {
       checkNotNull(task);
-      return mTasksRemoteDataSource.saveTask(task)
-            .mergeWith(mTasksLocalDataSource.saveTask(task))
-            .doOnCompleted(new Action0() {
-               @Override
-               public void call() {
-                  // Do in memory cache update to keep the app UI up to date
-                  if (mCachedTasks == null) {
-                     mCachedTasks = new LinkedHashMap<>();
-                  }
-                  mCachedTasks.put(task.getId(), task);
-               }
-            });
+      mTasksRemoteDataSource.saveTask(task);
+      mTasksLocalDataSource.saveTask(task);
+
+      // Do in memory cache update to keep the app UI up to date
+      if (mCachedTasks == null) {
+         mCachedTasks = new LinkedHashMap<>();
+      }
+      mCachedTasks.put(task.getId(), task);
+   }
+
+   @Override
+   public void completeTask(@NonNull final Task task) {
+      checkNotNull(task);
+      mTasksRemoteDataSource.completeTask(task);
+      mTasksLocalDataSource.completeTask(task);
+
+      Task completedTask = new Task(task.getTitle(), task.getDescription(), task.getId(), true);
+
+      // Do in memory cache update to keep the app UI up to date
+      if (mCachedTasks == null) {
+         mCachedTasks = new LinkedHashMap<>();
+      }
+      mCachedTasks.put(task.getId(), completedTask);
 
    }
 
    @Override
-   public Completable completeTask(@NonNull final Task task) {
-      checkNotNull(task);
-
-      return mTasksRemoteDataSource.completeTask(task)
-            .mergeWith(mTasksLocalDataSource.completeTask(task))
-            .doOnCompleted(new Action0() {
-               @Override
-               public void call() {
-                  Task completedTask = new Task(task.getTitle(), task.getDescription(), task.getId(), true);
-
-                  // Do in memory cache update to keep the app UI up to date
-                  if (mCachedTasks == null) {
-                     mCachedTasks = new LinkedHashMap<>();
-                  }
-                  mCachedTasks.put(task.getId(), completedTask);
-               }
-            });
-
-   }
-
-   @Override
-   public Completable completeTask(@NonNull String taskId) {
+   public void completeTask(@NonNull String taskId) {
       checkNotNull(taskId);
-      return completeTask(getTaskWithId(taskId));
+      completeTask(getTaskWithId(taskId));
    }
 
    @Override
-   public Completable activateTask(@NonNull final Task task) {
+   public void activateTask(@NonNull final Task task) {
       checkNotNull(task);
+      mTasksRemoteDataSource.activateTask(task);
+      mTasksLocalDataSource.activateTask(task);
 
-      return mTasksRemoteDataSource.activateTask(task)
-            .mergeWith(mTasksLocalDataSource.activateTask(task))
-            .doOnCompleted(new Action0() {
-               @Override
-               public void call() {
-                  Task activeTask = new Task(task.getTitle(), task.getDescription(), task.getId());
+      Task activeTask = new Task(task.getTitle(), task.getDescription(), task.getId());
 
-                  // Do in memory cache update to keep the app UI up to date
-                  if (mCachedTasks == null) {
-                     mCachedTasks = new LinkedHashMap<>();
-                  }
-                  mCachedTasks.put(task.getId(), activeTask);
-               }
-            });
+      // Do in memory cache update to keep the app UI up to date
+      if (mCachedTasks == null) {
+         mCachedTasks = new LinkedHashMap<>();
+      }
+      mCachedTasks.put(task.getId(), activeTask);
    }
 
    @Override
-   public Completable activateTask(@NonNull String taskId) {
+   public void activateTask(@NonNull String taskId) {
       checkNotNull(taskId);
-      return activateTask(getTaskWithId(taskId));
+      activateTask(getTaskWithId(taskId));
    }
 
    @Override
-   public Completable clearCompletedTasks() {
-      return mTasksRemoteDataSource.clearCompletedTasks()
-            .mergeWith(mTasksLocalDataSource.clearCompletedTasks())
-            .doOnCompleted(new Action0() {
-               @Override
-               public void call() {
-                  // Do in memory cache update to keep the app UI up to date
-                  if (mCachedTasks == null) {
-                     mCachedTasks = new LinkedHashMap<>();
-                  }
-                  Iterator<Map.Entry<String, Task>> it = mCachedTasks.entrySet().iterator();
-                  while (it.hasNext()) {
-                     Map.Entry<String, Task> entry = it.next();
-                     if (entry.getValue().isCompleted()) {
-                        it.remove();
-                     }
-                  }
-               }
-            });
+   public void clearCompletedTasks() {
+      mTasksRemoteDataSource.clearCompletedTasks();
+      mTasksLocalDataSource.clearCompletedTasks();
+
+      // Do in memory cache update to keep the app UI up to date
+      if (mCachedTasks == null) {
+         mCachedTasks = new LinkedHashMap<>();
+      }
+      Iterator<Map.Entry<String, Task>> it = mCachedTasks.entrySet().iterator();
+      while (it.hasNext()) {
+         Map.Entry<String, Task> entry = it.next();
+         if (entry.getValue().isCompleted()) {
+            it.remove();
+         }
+      }
 
    }
 
@@ -237,17 +203,6 @@ public class TasksRepository implements TasksDataSource {
       }
       return mTasksLocalDataSource.getTask(taskId)
             .switchIfEmpty(mTasksRemoteDataSource.getTask(taskId));
-//
-//      return mTasksLocalDataSource.getTask(taskId).flatMap(new Func1<Task, Observable<Task>>() {
-//         @Override
-//         public Observable<Task> call(Task task) {
-//            if(task==null){
-//               return mTasksRemoteDataSource.getTask(taskId);
-//            }else{
-//               return Observable.just(task);
-//            }
-//         }
-//      });
    }
 
 
@@ -268,17 +223,11 @@ public class TasksRepository implements TasksDataSource {
    }
 
    @Override
-   public Completable deleteTask(@NonNull final String taskId) {
-      return Completable.create(new Completable.OnSubscribe() {
-         @Override
-         public void call(CompletableSubscriber completableSubscriber) {
-            mTasksRemoteDataSource.deleteTask(checkNotNull(taskId));
-            mTasksLocalDataSource.deleteTask(checkNotNull(taskId));
-            mCachedTasks.remove(taskId);
+   public void deleteTask(@NonNull final String taskId) {
+      mTasksRemoteDataSource.deleteTask(checkNotNull(taskId));
+      mTasksLocalDataSource.deleteTask(checkNotNull(taskId));
 
-            completableSubscriber.onCompleted();
-         }
-      });
+      mCachedTasks.remove(taskId);
 
    }
 

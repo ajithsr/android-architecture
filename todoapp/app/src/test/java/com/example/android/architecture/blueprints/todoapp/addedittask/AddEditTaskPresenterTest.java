@@ -28,7 +28,6 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 import rx.Scheduler;
-import rx.observers.TestSubscriber;
 import rx.schedulers.Schedulers;
 
 import static org.mockito.Mockito.verify;
@@ -107,7 +106,7 @@ public class AddEditTaskPresenterTest {
     }
 
     private void givenFakeRepository(Task testTask) {
-        fakeTasksRepository.saveTask(testTask).subscribe(new TestSubscriber());
+        fakeTasksRepository.saveTask(testTask);
     }
 
     private AddEditTaskPresenter givenEditTaskPresenter(String taskId) {

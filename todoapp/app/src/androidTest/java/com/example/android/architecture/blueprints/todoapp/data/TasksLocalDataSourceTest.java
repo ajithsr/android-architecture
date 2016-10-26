@@ -78,8 +78,7 @@ public class TasksLocalDataSourceTest {
       final Task newTask = new Task(TITLE, "");
 
       // When saved into the persistent repository
-      TestSubscriber<Object> testSubscriber1 = new TestSubscriber<>();
-      mLocalDataSource.saveTask(newTask).subscribe(testSubscriber1);
+      mLocalDataSource.saveTask(newTask);
 
       TestSubscriber<Task> testSubscriber2 = new TestSubscriber<>();
       mLocalDataSource.getTask(newTask.getId()).subscribe(testSubscriber2);
@@ -92,12 +91,10 @@ public class TasksLocalDataSourceTest {
    public void completeTask_retrievedTaskIsComplete() {
       // Given a new task in the persistent repository
       final Task newTask = new Task(TITLE, "");
-      TestSubscriber<Object> testSubscriber1 = new TestSubscriber<>();
-      mLocalDataSource.saveTask(newTask).subscribe(testSubscriber1);
+      mLocalDataSource.saveTask(newTask);
 
       // When completed in the persistent repository
-      TestSubscriber<Object> testSubscriber2 = new TestSubscriber<>();
-      mLocalDataSource.completeTask(newTask).subscribe(testSubscriber2);
+      mLocalDataSource.completeTask(newTask);
 
       // When we retrieve the task form the repository
       TestSubscriber<Task> testSubscriber3 = new TestSubscriber<>();
@@ -115,11 +112,11 @@ public class TasksLocalDataSourceTest {
    public void activateTask_retrievedTaskIsActive() {
       // Given a new completed task in the persistent repository
       final Task newTask = new Task(TITLE, "");
-      mLocalDataSource.saveTask(newTask).subscribe(new TestSubscriber<>());
-      mLocalDataSource.completeTask(newTask).subscribe(new TestSubscriber<>());
+      mLocalDataSource.saveTask(newTask);
+      mLocalDataSource.completeTask(newTask);
 
       // When activated in the persistent repository
-      mLocalDataSource.activateTask(newTask).subscribe(new TestSubscriber<>());
+      mLocalDataSource.activateTask(newTask);
 
       // Then the task can be retrieved from the persistent repository and is active
       TestSubscriber<Task> testSubscriber = new TestSubscriber<>();
@@ -135,16 +132,16 @@ public class TasksLocalDataSourceTest {
    public void clearCompletedTask_taskNotRetrievable() {
       // Given 2 new completed tasks and 1 active task in the persistent repository
       final Task newTask1 = new Task(TITLE, "");
-      mLocalDataSource.saveTask(newTask1).subscribe(new TestSubscriber<>());
-      mLocalDataSource.completeTask(newTask1).subscribe(new TestSubscriber<>());
+      mLocalDataSource.saveTask(newTask1);
+      mLocalDataSource.completeTask(newTask1);
       final Task newTask2 = new Task(TITLE2, "");
-      mLocalDataSource.saveTask(newTask2).subscribe(new TestSubscriber<>());
-      mLocalDataSource.completeTask(newTask2).subscribe(new TestSubscriber<>());
+      mLocalDataSource.saveTask(newTask2);
+      mLocalDataSource.completeTask(newTask2);
       final Task newTask3 = new Task(TITLE3, "");
-      mLocalDataSource.saveTask(newTask3).subscribe(new TestSubscriber<>());
+      mLocalDataSource.saveTask(newTask3);
 
       // When completed tasks are cleared in the repository
-      mLocalDataSource.clearCompletedTasks().subscribe(new TestSubscriber<>());
+      mLocalDataSource.clearCompletedTasks();
 
       // Then the completed tasks cannot be retrieved and the active one can
       TestSubscriber<Task> testSubscriber1 = new TestSubscriber<>();
@@ -164,7 +161,7 @@ public class TasksLocalDataSourceTest {
    public void deleteAllTasks_emptyListOfRetrievedTask() {
       // Given a new task in the persistent repository and a mocked callback
       Task newTask = new Task(TITLE, "");
-      mLocalDataSource.saveTask(newTask).subscribe(new TestSubscriber<>());
+      mLocalDataSource.saveTask(newTask);
 
       // When all tasks are deleted
       mLocalDataSource.deleteAllTasks();
@@ -179,10 +176,10 @@ public class TasksLocalDataSourceTest {
     public void getTasks_retrieveSavedTasks() {
         // Given 2 new tasks in the persistent repository
         final Task newTask1 = new Task(TITLE, "");
-        mLocalDataSource.saveTask(newTask1).subscribe(new TestSubscriber<>());
+        mLocalDataSource.saveTask(newTask1);
 
         final Task newTask2 = new Task(TITLE, "");
-        mLocalDataSource.saveTask(newTask2).subscribe(new TestSubscriber<>());
+        mLocalDataSource.saveTask(newTask2);
 
 
        TestSubscriber<ArrayList<Task>> testSubscriber = new TestSubscriber<>();

@@ -23,6 +23,7 @@ import com.example.android.architecture.blueprints.todoapp.data.source.TasksRepo
 
 import rx.Observable;
 import rx.Scheduler;
+import rx.Subscriber;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -40,8 +41,15 @@ public class CompleteTask extends UseCaseRx<CompleteTask.RequestValues> {
     }
 
     @Override
-    protected Observable buildUseCaseObservable(RequestValues requestValues) {
-        return mTasksRepository.completeTask(requestValues.getCompletedTask()).toObservable();
+    protected Observable buildUseCaseObservable(final RequestValues requestValues) {
+
+        return Observable.create(new Observable.OnSubscribe<Object>() {
+            @Override
+            public void call(Subscriber<? super Object> subscriber) {
+                mTasksRepository.completeTask(requestValues.getCompletedTask());
+                subscriber.onCompleted();
+            }
+        });
     }
 
     public static final class RequestValues extends UseCaseRx.RequestValues {

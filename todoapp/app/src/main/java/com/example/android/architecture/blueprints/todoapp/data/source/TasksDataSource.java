@@ -22,7 +22,6 @@ import com.example.android.architecture.blueprints.todoapp.tasks.domain.model.Ta
 
 import java.util.ArrayList;
 
-import rx.Completable;
 import rx.Observable;
 
 /**
@@ -39,21 +38,21 @@ public interface TasksDataSource {
 
     Observable<Task> getTask(@NonNull String taskId);
 
-    Completable saveTask(@NonNull Task task);
+    void saveTask(@NonNull Task task);
 
-    Completable completeTask(@NonNull Task task);
+    void completeTask(@NonNull Task task);
 
-    Completable completeTask(@NonNull String taskId);
+    void completeTask(@NonNull String taskId);
 
-    Completable activateTask(@NonNull Task task);
+    void activateTask(@NonNull Task task);
 
-    Completable activateTask(@NonNull String taskId);
+    void activateTask(@NonNull String taskId);
 
-    Completable clearCompletedTasks();
+    void clearCompletedTasks();
 
     void refreshTasks();
 
     void deleteAllTasks();
 
-    Completable deleteTask(@NonNull String taskId);
+    void deleteTask(@NonNull String taskId);
 }

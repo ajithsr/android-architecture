@@ -28,8 +28,6 @@ import com.example.android.architecture.blueprints.todoapp.tasks.domain.model.Ta
 
 import java.util.ArrayList;
 
-import rx.Completable;
-import rx.CompletableSubscriber;
 import rx.Observable;
 import rx.Subscriber;
 
@@ -149,11 +147,8 @@ public class TasksLocalDataSource implements TasksDataSource {
 
 
    @Override
-   public Completable saveTask(@NonNull final Task task) {
-      checkNotNull(task);
-      return Completable.create(new Completable.OnSubscribe() {
-         @Override
-         public void call(CompletableSubscriber completableSubscriber) {
+   public void saveTask(@NonNull final Task task) {
+
             SQLiteDatabase db = mDbHelper.getWritableDatabase();
 
             ContentValues values = new ContentValues();
@@ -165,16 +160,10 @@ public class TasksLocalDataSource implements TasksDataSource {
             db.insert(TaskEntry.TABLE_NAME, null, values);
 
             db.close();
-            completableSubscriber.onCompleted();
-         }
-      });
    }
 
    @Override
-   public Completable completeTask(@NonNull final Task task) {
-     return Completable.create(new Completable.OnSubscribe() {
-         @Override
-         public void call(CompletableSubscriber completableSubscriber) {
+   public void completeTask(@NonNull final Task task) {
             SQLiteDatabase db = mDbHelper.getWritableDatabase();
 
             ContentValues values = new ContentValues();
@@ -186,23 +175,16 @@ public class TasksLocalDataSource implements TasksDataSource {
             db.update(TaskEntry.TABLE_NAME, values, selection, selectionArgs);
 
             db.close();
-            completableSubscriber.onCompleted();
-         }
-      });
    }
 
    @Override
-   public Completable completeTask(@NonNull String taskId) {
+   public void completeTask(@NonNull String taskId) {
       // Not required for the local data source because the {@link TasksRepository} handles
       // converting from a {@code taskId} to a {@link task} using its cached data.
-      return null;
    }
 
    @Override
-   public Completable activateTask(@NonNull final Task task) {
-      return Completable.create(new Completable.OnSubscribe() {
-         @Override
-         public void call(CompletableSubscriber completableSubscriber) {
+   public void activateTask(@NonNull final Task task) {
             SQLiteDatabase db = mDbHelper.getWritableDatabase();
 
             ContentValues values = new ContentValues();
@@ -214,24 +196,16 @@ public class TasksLocalDataSource implements TasksDataSource {
             db.update(TaskEntry.TABLE_NAME, values, selection, selectionArgs);
 
             db.close();
-            completableSubscriber.onCompleted();
-         }
-      });
-
    }
 
    @Override
-   public Completable activateTask(@NonNull String taskId) {
+   public void activateTask(@NonNull String taskId) {
       // Not required for the local data source because the {@link TasksRepository} handles
       // converting from a {@code taskId} to a {@link task} using its cached data.
-      return null;
    }
 
    @Override
-   public Completable clearCompletedTasks() {
-      return Completable.create(new Completable.OnSubscribe() {
-         @Override
-         public void call(CompletableSubscriber completableSubscriber) {
+   public void clearCompletedTasks() {
             SQLiteDatabase db = mDbHelper.getWritableDatabase();
 
             String selection = TaskEntry.COLUMN_NAME_COMPLETED + " LIKE ?";
@@ -240,10 +214,6 @@ public class TasksLocalDataSource implements TasksDataSource {
             db.delete(TaskEntry.TABLE_NAME, selection, selectionArgs);
 
             db.close();
-            completableSubscriber.onCompleted();
-         }
-      });
-
    }
 
    @Override
@@ -262,10 +232,7 @@ public class TasksLocalDataSource implements TasksDataSource {
    }
 
    @Override
-   public Completable deleteTask(@NonNull final String taskId) {
-      return Completable.create(new Completable.OnSubscribe() {
-         @Override
-         public void call(CompletableSubscriber completableSubscriber) {
+   public void deleteTask(@NonNull final String taskId) {
             SQLiteDatabase db = mDbHelper.getWritableDatabase();
 
             String selection = TaskEntry.COLUMN_NAME_ENTRY_ID + " LIKE ?";
@@ -274,8 +241,5 @@ public class TasksLocalDataSource implements TasksDataSource {
             db.delete(TaskEntry.TABLE_NAME, selection, selectionArgs);
 
             db.close();
-         }
-      });
-
    }
 }
